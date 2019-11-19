@@ -141,6 +141,7 @@ def create_preset_from_config_file(config_dict, name):
 
 
 
+
 #config ={"mut_rate": [0.5, 0.5, 0.5, 0.5], "pop_size": 100, "gen_length": 1, "bpm_base": 10, "refresh_rate": 8, "instr_count": [1, 1, 1, 1]}
 #print(config)
 #create_preset_from_config_file(config, "default_100")
