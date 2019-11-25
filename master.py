@@ -18,16 +18,16 @@ def run_evolution():
     evolution.main()
 
 
-def run_config():
+def run_config(): #sin):
     import config
-    #config.main()
+    config.main()
 
 
 if __name__ == '__main__':
 
     print("Welcome to the Evo Art geometric music project.")
 
-    sin = sys.stdin.fileno()
+    #sin = sys.stdin.fileno()
 
     geo_thread = multiprocessing.Process(name='geo_thread', target=run_geometry)
     evo_thread = multiprocessing.Process(name='evo_thread', target=run_evolution)
