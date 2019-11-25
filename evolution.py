@@ -153,7 +153,14 @@ def main():
 
             # save new populations to respective csvs
             pop_genes = pd.DataFrame(pop, columns=gen_cols)
-            pop_genes.to_csv(files[i])
+
+            save_complete = False
+            while not save_complete:
+                try:
+                    pop_genes.to_csv(files[i])
+                    save_complete = True
+                except:
+                    print(f"saving {files[i]} failed.")
 
             # selection for next_play using NSGA2
             best_genes = toolbox.select(pop, int(preset_config['instr_count'][i]))
@@ -164,7 +171,13 @@ def main():
             next_play = pd.concat([next_play, best_phenotypes])
 
         # not the prettiest code but it works. Maps playing genes back to a pd.df of phenes
-        next_play.to_csv(f'{preset_path}current/playing.csv')
+        save_complete = False
+        while not save_complete:
+            try:
+                next_play.to_csv(f'{preset_path}current/playing.csv')
+                save_complete = True
+            except:
+                print(f"saving {preset_path}current/playing.csv failed.")
 
         time.sleep(preset_config['gen_length'])
 
