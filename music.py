@@ -33,9 +33,12 @@ LOW_PERC = [x for x in glob.glob('samples/LOW_PERC/*')]
 
 
 def get_sample_name(path):
+
     string = str(path)
+    string = string.split('\\')[-1]
     elem = string.split('/')[-1]
     sample_name = elem.replace('.wav', '')
+
     return sample_name
 
 

@@ -7,7 +7,7 @@ from presets import *
 from autopilot import *
 
 # Set the height and width of the screen
-size = [1400, 700]
+size = [1920, 1080]
 center = [size[0] / 2, size[1] / 2]
 pos_line = [[center[0], 0], center]
 
@@ -65,11 +65,11 @@ def main():
         delta_t = t0 - t_minus1
         #print(f"Delta T GEOMETRY{delta_t}")
 
-        if i % FPS == 0:
+        if i % (FPS/FPS) == 0:
 
             # make sure we have our config files
             preset_path = read_preset_path()
-            #preset_config = load_config(preset_path)
+            preset_config = load_config(preset_path)
             scaling_factor = read_scaling_factor()
 
             # set csv of currently playing instrument
@@ -98,7 +98,7 @@ def main():
         # This is where the magic happens
         for phenotype in phenotypes:
             #phenotype = make_phenotype(genes)
-            make_polygon(phenotype, t0, delta_t, scaling_factor)
+            make_polygon(phenotype, t0, delta_t, preset_config, scaling_factor)
 
         # This MUST happen after all the other drawing commands.
         pygame.display.flip()
@@ -132,7 +132,7 @@ def rotatePoint(polarcorner, angle, center=center):
     return newPolarcorner
 
 
-def make_polygon(genes, t, delta_t, scaling_factor):
+def make_polygon(genes, t, delta_t, preset_config, scaling_factor):
 
     # Now this is where the magic happens...
 
@@ -148,7 +148,7 @@ def make_polygon(genes, t, delta_t, scaling_factor):
 
         # get the rotation angles
         prev_angle = round((t-delta_t) * (360. / genes['order']) * (genes['bpm'] / 60.), 3)
-        current_angle = round(t * (360. / genes['order']) * (genes['bpm'] / 60.), 3)
+        current_angle = round(preset_config['speed'] * t * (360. / genes['order']) * (genes['bpm'] / 60.), 3)
         prev_angle += (genes['initial_offset'] * i + genes['total_offset']) * (360. / genes['order'])
         current_angle += (genes['initial_offset'] * i + genes['total_offset']) * (360. / genes['order'])
 

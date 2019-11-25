@@ -47,7 +47,7 @@ def random_genome():
     return genes
 
 
-def make_phenotype(genes, nature):
+def make_phenotype(genes, nature, config_dict):
     """
     Function that maps a genepool to a pool of phenotypes.
     Input: indexed pandas table of genes
@@ -59,8 +59,8 @@ def make_phenotype(genes, nature):
                  rootoctave=int(genes['rootoctave'] * 3 + 3),
                  order=int(genes['order'] * 9 + 3),
                  number=int(genes['number'] * 3 + 1),
-                 bpm=int(15*2**int(genes['bpm']*3)),
-                 total_offset=(1/8) * int(genes['total_offset'] * 8) * 0.5**int(genes['bpm']*3),
+                 bpm=int(config_dict['bpm_base']*2**int(genes['bpm']*3)),
+                 total_offset=(1/8)* int(genes['total_offset'] * 8) * 0.5**int(genes['bpm']*3),
                  initial_offset=(1/8) * int(genes['initial_offset'] * 8) * 1**int(genes['bpm']*3),
                  red=int(genes['red'] * 155 + 100), green=int(genes['green'] * 155 + 100),
                  blue=int(genes['blue'] * 155 + 100),
@@ -70,7 +70,7 @@ def make_phenotype(genes, nature):
                  amp=round(genes['amp'] * 0.5 + 0.5, 2),
                  cutoff=int(genes['cutoff'] * 30 + 70),
                  pan=round(genes['pan'] - 0.5, 2),
-                 attack=round(genes['attack'] / 2, 2),
+                 attack=0, #round(genes['attack'] / 2, 2),
                  release=round(genes['release'], 2),
                  mod_range=int(genes['mod_range'] * 10 + 2),
                  mod_phase=round(genes['mod_phase'] * .7 + .1, 2),
@@ -78,21 +78,20 @@ def make_phenotype(genes, nature):
                  mix_reverb=round(genes['mix_reverb'] * .7 + .3, 2),
                  mix_echo=round(genes['mix_echo'] * .6, 2),
                  # Now the sample related stuff
-                 #pitch_change=int(genes['pitch'] * 24 - 12)
-                 pitch=int(genes['rootnote'] * 12),
+                 pitch=int(genes['rootnote'] * 12 - 6),
                  nature=natures[nature]
                  )
 
     return phenotype
 
-def gen2phen(genotypes, phen_cols, i):
+def gen2phen(genotypes, phen_cols, i, config_dict):
 
     geno_dict = genotypes.to_dict(orient="records")
 
     phenotypes = []
 
     for child in geno_dict:
-        phenotypes.append(make_phenotype(child, i))
+        phenotypes.append(make_phenotype(child, i, config_dict))
 
     phenotypes_df = pd.DataFrame(phenotypes, columns=phen_cols)
     return phenotypes_df

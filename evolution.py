@@ -47,7 +47,8 @@ def initPopulation(pcls, ind_init, filename):
         contents.append(list(genome))
     return pcls(ind_init(c) for c in contents)
 
-def evaluation(population, optimum):
+
+def evaluation(population, optimum, toolbox):
 
     # subset of cols to evaluate
     # calc distance based on subset
@@ -56,49 +57,33 @@ def evaluation(population, optimum):
 
     opt = optimum.loc[:,subset].values
     pop = population.loc[:,subset].values
-    print(opt)
 
-    #opt = [[3]]
     fitnesses = map(toolbox.evaluate, pop, repeat(opt))
     #print(list(fitnesses))
     return fitnesses
 
 
-# DEAP stuff
-creator.create("FitnessMax", base.Fitness, weights=(1.00,))
-creator.create("Individual", list, fitness=creator.FitnessMax)
+def initialize(preset_config):
 
-toolbox = base.Toolbox()
+    # DEAP stuff
+    creator.create("FitnessMax", base.Fitness, weights=(0.00,))
+    creator.create("Individual", list, fitness=creator.FitnessMax)
 
-toolbox.register("individual", initIndividual, creator.Individual)
-toolbox.register("population", initPopulation, list, toolbox.individual)
+    toolbox = base.Toolbox()
 
-toolbox.register("evaluate", distance)
-toolbox.register("mate", tools.cxTwoPoint)
-toolbox.register("mutate", tools.mutPolynomialBounded, eta=.9, low=0., up=1., indpb=0.9)
-#toolbox.register("mutate", tools.mutGaussian, mu=0.5, sigma=0.1, indpb=0.05)
-#toolbox.register("select", tools.selNSGA2)
-toolbox.register("select", tools.selWorst)
+    toolbox.register("individual", initIndividual, creator.Individual)
+    toolbox.register("population", initPopulation, list, toolbox.individual)
 
+    toolbox.register("evaluate", distance)
+    toolbox.register("mate", tools.cxTwoPoint)
+    toolbox.register("mutate", tools.mutPolynomialBounded, eta=preset_config['mut_eta'], low=0., up=1., indpb=preset_config['mut_indpb'])
+    # toolbox.register("mutate", tools.mutGaussian, mu=0.5, sigma=0.1, indpb=0.05)
+    # toolbox.register("select", tools.selNSGA2)
+    toolbox.register("select", tools.selWorst)
 
+    return toolbox
 
 def main():
-
-    preset_path = read_preset_path()
-    preset_config = load_config(preset_path)
-
-    playing_path = preset_path + 'current/playing.csv'
-    phen_cols = [x for x in load_genepool(playing_path).columns]# if x not in ['nature', 'pitch']]
-    gen_cols = [x for x in load_genepool(playing_path).columns if x not in ['nature', 'pitch']]
-
-    # Initializing the populations
-    files = glob.glob(preset_path + 'current/*.csv')
-    try:
-        files.remove(f'{preset_path}current/playing.csv')
-    except:
-        pass
-
-    pops = [toolbox.population(file) for file in files]
 
     g = 0  # generation counter
 
@@ -106,6 +91,20 @@ def main():
     while not done:
 
         g += 1
+
+        preset_path = read_preset_path()
+        preset_config = load_config(preset_path)
+        playing_path = preset_path + 'current/playing.csv'
+
+        toolbox = initialize(preset_config)
+
+        phen_cols = [x for x in load_genepool(playing_path).columns]
+        gen_cols = [x for x in load_genepool(playing_path).columns if x not in ['nature', 'pitch']]
+
+        # Initializing the populations
+        files = [file.replace('\\', '/') for file in glob.glob(preset_path + 'current/*.csv') if 'playing' not in file]
+
+        pops = [toolbox.population(file) for file in files]
 
         mutpb = preset_config['mut_rate']
 
@@ -137,13 +136,14 @@ def main():
             pop_offspring = []
 
             for child in offspring_dict:
-                pop_offspring.append(make_phenotype(child, i))
+                pop_offspring.append(make_phenotype(child, i, preset_config))
 
             pop_phenotypes = pd.DataFrame(pop_offspring, columns=phen_cols)
 
-            fitnesses = evaluation(pop_phenotypes, optimum)
+            fitnesses = evaluation(pop_phenotypes, optimum, toolbox)
 
             # for some stupid reason, not printing here will mean the code doesn't work (WTF? python 3 issue i think)
+
             print(list(zip(offspring, fitnesses)))
 
             for ind, fit in zip(offspring, list(fitnesses)):
@@ -156,19 +156,15 @@ def main():
             pop_genes.to_csv(files[i])
 
             # selection for next_play using NSGA2
-            best_genes = toolbox.select(pop, preset_config['instr_count'][i])
+            best_genes = toolbox.select(pop, int(preset_config['instr_count'][i]))
             best_genes = pd.DataFrame(best_genes, columns=gen_cols)
 
             # convert next play to phenotype and save as play.csv
-            best_phenotypes = gen2phen(best_genes, phen_cols, i)
+            best_phenotypes = gen2phen(best_genes, phen_cols, i, preset_config)
             next_play = pd.concat([next_play, best_phenotypes])
 
         # not the prettiest code but it works. Maps playing genes back to a pd.df of phenes
         next_play.to_csv(f'{preset_path}current/playing.csv')
-
-        # updating configs
-        preset_path = read_preset_path()
-        preset_config = load_config(preset_path)
 
         time.sleep(preset_config['gen_length'])
 
