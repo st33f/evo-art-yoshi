@@ -10,10 +10,10 @@ import os
 base_dir = os.getcwd() + '/'
 
 # instruments
-#synths = ['mod_beep', 'mod_pulse', 'mod_sine', 'growl']
+synths = ['mod_beep', 'mod_pulse', 'mod_sine', 'growl']
 #synths = ['hollow', 'dark_ambience', 'dull_bell', 'sine']
 #synths = ['sine', 'sine', 'sine', 'sine']
-synths = ['piano', 'piano', 'piano', 'piano']
+#synths = ['piano', 'piano', 'piano', 'piano']
 # synths = ['tech_saws', 'tech_saws', 'tech_saws', 'tech_saws']
 
 # high_percs = ['drum_cymbal_pedal', 'drum_cymbal_closed', 'drum_tom_hi_soft', 'perc_bell', 'ambi_choir', 'tabla_tun1', 'tabla_tun3', 'tabla_tas3']
@@ -33,13 +33,17 @@ LOW_PERC = [x for x in glob.glob('samples/LOW_PERC/*')]
 
 
 def get_sample_name(path):
+
     string = str(path)
+    string = string.split('\\')[-1]
     elem = string.split('/')[-1]
     sample_name = elem.replace('.wav', '')
+
     return sample_name
 
 
 def setup_listeners():
+    i = 0
     # setting up metronome
     run("""use_debug false
 live_loop :metronome do
@@ -50,13 +54,15 @@ end""")
     for synth in synths:
         # print("setting up listener for", synth)
         run(f"""in_thread do
-  live_loop :{synth}, sync: :tick do
-    n, c, a, r, p, m = sync "/osc/trigger/{synth}"
+  live_loop :{synth}_{i}, sync: :tick do
+    n, c, a, r, p, m = sync "/osc/trigger/{synth}_{i}"
     with_fx :reverb, mix: m, room: 0.5, pre_amp: 0.1 do
       synth :{synth}, note: n, cutoff: c, attack: a, release: r, pan: p
     end
   end
 end""")
+        i += 1
+
 
     for bass in BASS:
         sample_name = get_sample_name(bass)
@@ -111,7 +117,7 @@ def play_sound(phenotype):
                      phenotype['mix_echo'], phenotype['pitch'])
     elif 'synth' in phenotype['nature']:
         # print('Synth: ', synths[phenotype['instrument']])
-        send_message(f"/trigger/{synths[phenotype['instrument']]}", phenotype['note'], phenotype['cutoff'], phenotype['attack'],
+        send_message(f"/trigger/{synths[phenotype['instrument']]}_{phenotype['instrument']}", phenotype['note'], phenotype['cutoff'], phenotype['attack'],
                      phenotype['release'], phenotype['mix_reverb'])
 
     return

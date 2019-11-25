@@ -18,9 +18,9 @@ def run_evolution():
     evolution.main()
 
 
-def run_config(sin):
+def run_config():
     import config
-    config.main(sin)
+    #config.main()
 
 
 if __name__ == '__main__':
@@ -31,7 +31,7 @@ if __name__ == '__main__':
 
     geo_thread = multiprocessing.Process(name='geo_thread', target=run_geometry)
     evo_thread = multiprocessing.Process(name='evo_thread', target=run_evolution)
-    config_thread = multiprocessing.Process(name='config_thread', target=run_config, args=(sin,))
+    config_thread = multiprocessing.Process(name='config_thread', target=run_config)#, args=(sin,))
     autopilot_thread = multiprocessing.Process(name='autopilot_thread', target=run_autopilot)
 
     geo_thread.start()
@@ -39,7 +39,7 @@ if __name__ == '__main__':
     config_thread.start()
     autopilot_thread.start()
 
-    while geo_thread.is_alive() and config_thread.is_alive() and evo_thread.is_alive() and autopilot_thread.is_alive():
+    while geo_thread.is_alive() and evo_thread.is_alive() and autopilot_thread.is_alive() and config_thread.is_alive():
         time.sleep(1)
 
     geo_thread.terminate()

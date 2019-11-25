@@ -93,7 +93,6 @@ class Gui(QDialog):
     def createPresetChooser(self, masterConfigPath=MASTER_CONFIG_PATH):
         presets = glob.glob(PRESETS_PATH + '*')
         preset_names = [x.split(os.sep)[-1] for x in presets]
-        print(preset_names)
 
         self.PresetChooser = QHBoxLayout()
 
@@ -102,6 +101,8 @@ class Gui(QDialog):
         self.presetComboBox = QComboBox()
         self.presetComboBox.addItems(preset_names)
         index = self.presetComboBox.findText(self.presetName)
+        #print(preset_names)
+        #print(index)
 
         if index >= 0:
             self.presetComboBox.setCurrentIndex(index)
@@ -111,17 +112,17 @@ class Gui(QDialog):
         presetLabel = QLabel("&Active preset:")
         presetLabel.setBuddy(self.presetComboBox)
 
-        self.saveBtn = QPushButton("Select")
-        self.saveBtn.clicked.connect(lambda: self.saveDict(self.master_config_dict, masterConfigPath))
+        self.selectBtn = QPushButton("Select")
+        self.selectBtn.clicked.connect(lambda: self.saveDict(self.master_config_dict, masterConfigPath))
 
         self.PresetChooser.addWidget(presetLabel)
         self.PresetChooser.addWidget(self.presetComboBox)
-        self.PresetChooser.addWidget(self.saveBtn)
+        self.PresetChooser.addWidget(self.selectBtn)
         #print(preset_names)
 
 
     def updateMasterConfig(self, index):
-        self.master_config_dict = load_config()
+        self.master_config_dict = load_config(MASTER_CONFIG_PATH)
         self.presetName = self.presetComboBox.itemText(index)
         #self.master_config_dict['preset_path'].split(os.sep)[-2]
         self.master_config_dict['preset_path'] = PRESETS_PATH + self.presetName + '/'
@@ -129,17 +130,33 @@ class Gui(QDialog):
 
 
     def createDictEditor(self, presetPath):
-        widgets = {}
+        self.widgets = {}
         self.DictEditor = QFormLayout()
-        config_dict = load_config(presetPath)
-        for key, value in config_dict.items():
-            widgets[key] = widget = {}
+        self.config_dict = load_config(presetPath)
+        for key, value in self.config_dict.items():
+            self.widgets[key] = widget = {}
             widget['lineedit'] = lineedit = QLineEdit(str(value))
+            widget['lineedit'].textChanged.connect(lambda: self.checkDict())
             self.DictEditor.addRow(key, lineedit)
 
         self.saveBtn = QPushButton("Save config")
-        self.saveBtn.clicked.connect(lambda: self.saveDict(config_dict, presetPath))
+        self.saveBtn.clicked.connect(lambda: self.saveDict(self.config_dict, presetPath))
         self.DictEditor.addRow(self.saveBtn)
+        self.checkDict()
+
+
+    def checkDict(self):
+
+        try:
+            for key, value in self.config_dict.items():
+                self.config_dict[key] = eval(self.widgets[key]['lineedit'].text())
+            self.saveBtn.setEnabled(True)
+        except:
+            self.saveBtn.setEnabled(False)
+
+        #print(self.config_dict)
+
+
     """
 
 
@@ -169,9 +186,14 @@ class Gui(QDialog):
 
     def saveDict(self, configDict, configPath):
 
-        if sys.platform == "win32":
-            configPath = os.path.normpath(configPath)
+        #print(configPath)
+        #if sys.platform == "win32":
+        #    configPath = os.path.normpath(configPath)
 
+        for key, value in self.config_dict.items():
+            configDict[key] = eval(self.widgets[key]['lineedit'].text())
+
+        #print(configDict)
         print(f"saving config file as {configPath}config.json")
         save_config(configPath, configDict)
 
@@ -196,6 +218,17 @@ class Gui(QDialog):
         layout.addStretch(1)
         self.topLeftGroupBox.setLayout(layout)
 
+'''
+def main():
+
+    app = QApplication(sys.argv)
+    gui = Gui()
+    gui.show()
+    sys.exit(app.exec_())
+
+if __name__ == '__main__':
+    main()
+'''
 
 app = QApplication(sys.argv)
 gui = Gui()
