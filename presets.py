@@ -1,5 +1,5 @@
 from genetics import *
-from autopilot import *
+#from autopilot import *
 import json
 import os
 import glob

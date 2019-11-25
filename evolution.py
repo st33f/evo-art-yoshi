@@ -75,7 +75,7 @@ toolbox.register("population", initPopulation, list, toolbox.individual)
 
 toolbox.register("evaluate", distance)
 toolbox.register("mate", tools.cxTwoPoint)
-toolbox.register("mutate", tools.mutPolynomialBounded, eta=.9, low=0., up=1., indpb=0.9)
+toolbox.register("mutate", tools.mutPolynomialBounded, eta=.9, low=0., up=1., indpb=0.5)
 #toolbox.register("mutate", tools.mutGaussian, mu=0.5, sigma=0.1, indpb=0.05)
 #toolbox.register("select", tools.selNSGA2)
 toolbox.register("select", tools.selWorst)
