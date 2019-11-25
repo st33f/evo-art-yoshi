@@ -1,6 +1,6 @@
 from presets import *
 from PyQt5.QtWidgets import *
-from PyQt5.QtCore import Qt
+#from PyQt5.QtCore import Qt
 import glob
 import os
 import sys
@@ -15,21 +15,26 @@ class Gui(QDialog):
         self.resize(540, 340)
 
         self.master_config_dict = load_config(MASTER_CONFIG_PATH)
-        self.presetName = self.master_config_dict['preset_path'].split(os.sep)[-1]
+        self.preset_name = self.master_config_dict['preset_path'].split("/")[-2]
+        print(f"loading {self.preset_name} preset")
 
         self.mainLayout = QGridLayout()
 
-        self.createTopLayout()
-        self.mainLayout.addLayout(self.topLayout, 0, 0)
-
-        self.createPresetChooser()
+        self.create_preset_chooser()
         self.mainLayout.addLayout(self.PresetChooser, 1, 0)
 
-        self.createDictEditor(self.master_config_dict['preset_path'])
+        self.remake_dict_editor()
+
+    def remake_dict_editor(self):
+
+        try:
+            self.DictEditor.deleteLater()
+        except:
+            print()
+
+        self.create_dict_editor(self.master_config_dict['preset_path'])
         self.mainLayout.addLayout(self.DictEditor, 3, 0)
 
-        #self.createConfigEditor(self.master_config_dict['preset_path'])
-        #self.mainLayout.addLayout(self.ConfigEditor, 3, 0)
 
         # Initialize tab screen
         #self.tabLayout = QGridLayout()
@@ -42,16 +47,12 @@ class Gui(QDialog):
         #self.tabs.addTab(self.tab2, "Genes")
         # Create first tab
         #self.tab1.layout = QVBoxLayout(self)
-        # self.createDictEditor(self.master_config_dict['preset_path'])
+        # self.create_dict_editor(self.master_config_dict['preset_path'])
         #self.tab1.layout.addWidget(self.DictEditor)
         #self.pushButton1 = QPushButton("PyQt5 button 1")
         #self.tab1.layout.addWidget(self.pushButton1)
 
-
-
         #self.mainLayout.addWidget(self.tabs, 3, 0)
-
-
 
         #self.initTabs()
         #self.mainLayout.addLayout(self.tabLayout, 2, 0)
@@ -59,13 +60,102 @@ class Gui(QDialog):
         self.setLayout(self.mainLayout)
 
 
-    def createTopLayout(self):
+    def create_preset_chooser(self, master_config_path=MASTER_CONFIG_PATH):
+        presets = glob.glob(PRESETS_PATH + '*')
+        preset_names = [x.split(os.sep)[-1] for x in presets]
+
+        self.PresetChooser = QHBoxLayout()
+        self.presetComboBox = QComboBox()
+        self.presetComboBox.addItems(preset_names)
+        index = self.presetComboBox.findText(self.preset_name)
+
+        if index >= 0:
+            self.presetComboBox.setCurrentIndex(index)
+
+        self.presetComboBox.activated.connect(lambda: self.update_master_config())
+
+        presetLabel = QLabel("&Active preset:")
+        presetLabel.setBuddy(self.presetComboBox)
+
+        self.selectBtn = QPushButton("Select")
+        self.selectBtn.clicked.connect(lambda: self.save_master_dict(self.master_config_dict, master_config_path))
+
+        self.PresetChooser.addWidget(presetLabel)
+        self.PresetChooser.addWidget(self.presetComboBox)
+        self.PresetChooser.addWidget(self.selectBtn)
+
+
+    def update_master_config(self):
+
+        self.master_config_dict = load_config(MASTER_CONFIG_PATH)
+        self.preset_name = str(self.presetComboBox.currentText())
+        self.master_config_dict['preset_path'] = PRESETS_PATH + self.preset_name + '/'
+        self.remake_dict_editor()
+
+
+    def create_dict_editor(self, preset_path):
+
+        self.widgets = {}
+        self.DictEditor = QFormLayout()
+        self.config_dict = load_config(preset_path)
+        for key, value in self.config_dict.items():
+            self.widgets[key] = widget = {}
+            widget['lineedit'] = lineedit = QLineEdit(str(value))
+            widget['lineedit'].textChanged.connect(lambda: self.check_dict())
+            self.DictEditor.addRow(key, lineedit)
+
+        self.saveBtn = QPushButton("Save config")
+        self.saveBtn.clicked.connect(lambda: self.save_config_dict(self.config_dict, preset_path))
+        self.DictEditor.addRow(self.saveBtn)
+        self.check_dict()
+
+
+    def check_dict(self):
+
+        try:
+            for key, value in self.config_dict.items():
+                self.config_dict[key] = eval(self.widgets[key]['lineedit'].text())
+            self.saveBtn.setEnabled(True)
+        except:
+            self.saveBtn.setEnabled(False)
+
+
+    def save_config_dict(self, config_dict, config_path):
+
+        for key, value in config_dict.items():
+            config_dict[key] = eval(self.widgets[key]['lineedit'].text())
+
+        done = False
+        while not done:
+            try:
+                save_config(config_path, config_dict)
+                print(f"saving config file as {config_path}config.json")
+                done = True
+            except:
+                print(f"save of {config_path}config.json failed")
+
+
+    def save_master_dict(self, config_dict, config_path):
+
+        done = False
+        while not done:
+            try:
+                save_config(config_path, config_dict)
+                print(f"saving config file as {config_path}config.json")
+                done = True
+            except:
+                print("save master config failed")
+            
+            
+    """
+    
+    def create_top_layout(self):
 
         self.topLayout = QHBoxLayout()
         self.styleLabel = QLabel("Here you can edit the preset config file.")
         self.topLayout.addWidget(self.styleLabel)
-
-
+        
+        
     def initTabs(self):
 
         # Initialize tab screen
@@ -79,7 +169,7 @@ class Gui(QDialog):
         self.tabs.addTab(self.tab2, "Genes")
         # Create first tab
         self.tab1.layout = QVBoxLayout(self)
-        #self.createDictEditor(self.master_config_dict['preset_path'])
+        #self.create_dict_editor(self.master_config_dict['preset_path'])
         #self.tab1.layout.addWidget(self.DictEditor)
         #self.pushButton1 = QPushButton("PyQt5 button 1")
         #self.tab1.layout.addWidget(self.pushButton1)
@@ -88,138 +178,16 @@ class Gui(QDialog):
         #self.pushButton2 = QPushButton("PyQt5 button 2")
         #self.tab2.layout.addWidget(self.pushButton2)
         self.tabLayout.addWidget(self.tabs)
-
-
-    def createPresetChooser(self, masterConfigPath=MASTER_CONFIG_PATH):
-        presets = glob.glob(PRESETS_PATH + '*')
-        preset_names = [x.split(os.sep)[-1] for x in presets]
-
-        self.PresetChooser = QHBoxLayout()
-
-        #self.master_config_dict = load_config(masterConfigPath)
-
-        self.presetComboBox = QComboBox()
-        self.presetComboBox.addItems(preset_names)
-        index = self.presetComboBox.findText(self.presetName)
-        print(preset_names)
-        print(index)
-
-        if index >= 0:
-            self.presetComboBox.setCurrentIndex(index)
-
-        self.presetComboBox.activated.connect(self.updateMasterConfig)
-
-        presetLabel = QLabel("&Active preset:")
-        presetLabel.setBuddy(self.presetComboBox)
-
-        self.saveBtn = QPushButton("Select")
-        self.saveBtn.clicked.connect(lambda: self.saveDict(self.master_config_dict, masterConfigPath))
-
-        self.PresetChooser.addWidget(presetLabel)
-        self.PresetChooser.addWidget(self.presetComboBox)
-        self.PresetChooser.addWidget(self.saveBtn)
-        #print(preset_names)
-
-
-    def updateMasterConfig(self, index):
-        self.master_config_dict = load_config(MASTER_CONFIG_PATH)
-        self.presetName = self.presetComboBox.itemText(index)
-        #self.master_config_dict['preset_path'].split(os.sep)[-2]
-        self.master_config_dict['preset_path'] = PRESETS_PATH + self.presetName + '/'
-
-
-
-    def createDictEditor(self, presetPath):
-        self.widgets = {}
-        self.DictEditor = QFormLayout()
-        self.config_dict = load_config(presetPath)
-        for key, value in self.config_dict.items():
-            self.widgets[key] = widget = {}
-            widget['lineedit'] = lineedit = QLineEdit(str(value))
-            widget['lineedit'].textChanged.connect(lambda: self.checkDict())
-            self.DictEditor.addRow(key, lineedit)
-
-        self.saveBtn = QPushButton("Save config")
-        self.saveBtn.clicked.connect(lambda: self.saveDict(self.config_dict, presetPath))
-        self.DictEditor.addRow(self.saveBtn)
-        self.checkDict()
-
-
-    def checkDict(self):
-
-        try:
-            for key, value in self.config_dict.items():
-                self.config_dict[key] = eval(self.widgets[key]['lineedit'].text())
-            self.saveBtn.setEnabled(True)
-        except:
-            self.saveBtn.setEnabled(False)
-
-        #print(self.config_dict)
-
-
     """
 
+#app = QApplication(sys.argv)
+#gui = Gui()
+#gui.show()
+#sys.exit(app.exec_())
 
-    def createConfigEditor(self, presetPath):
-        config_dict = load_config(presetPath)
-        self.ConfigEditor = QGridLayout()
+def main():
 
-        self.ConfigEditor.addWidget(QLabel("Bass"), 1, 1)
-        self.ConfigEditor.addWidget(QLabel("Synth"), 1, 2)
-        self.ConfigEditor.addWidget(QLabel("High perc"), 1, 3)
-        self.ConfigEditor.addWidget(QLabel("Low perc"), 1, 4)
-
-        self.ConfigEditor.addWidget(QLabel("mutation rate"), 2, 0)
-        self.mut1 = QLineEdit(str(config_dict["mut_rate"]["bass"]))
-        #self.mut1..connect(self.updateLocalConfig())
-
-        self.ConfigEditor.addWidget(self.mut1)
-
-        self.saveBtn = QPushButton("Save config")
-        self.saveBtn.clicked.connect(lambda: self.saveDict(config_dict, presetPath))
-        self.ConfigEditor.addWidget(self.saveBtn)
-
-
-    def updateLocalConfig(self):
-        pass
-    """
-
-    def saveDict(self, configDict, configPath):
-
-        #print(configPath)
-        #if sys.platform == "win32":
-        #    configPath = os.path.normpath(configPath)
-
-        for key, value in self.config_dict.items():
-            configDict[key] = eval(self.widgets[key]['lineedit'].text())
-
-        #print(configDict)
-        print(f"saving config file as {configPath}config.json")
-        save_config(configPath, configDict)
-
-
-    def createTopLeftGroupBox(self):
-        self.topLeftGroupBox = QGroupBox("Group 1")
-
-        radioButton1 = QRadioButton("Radio button 1")
-        radioButton2 = QRadioButton("Radio button 2")
-        radioButton3 = QRadioButton("Radio button 3")
-        radioButton1.setChecked(True)
-
-        checkBox = QCheckBox("Tri-state check box")
-        checkBox.setTristate(True)
-        checkBox.setCheckState(Qt.PartiallyChecked)
-
-        layout = QVBoxLayout()
-        layout.addWidget(radioButton1)
-        layout.addWidget(radioButton2)
-        layout.addWidget(radioButton3)
-        layout.addWidget(checkBox)
-        layout.addStretch(1)
-        self.topLeftGroupBox.setLayout(layout)
-
-
-app = QApplication(sys.argv)
-gui = Gui()
-gui.show()
-sys.exit(app.exec_())
+    app = QApplication(sys.argv)
+    gui = Gui()
+    gui.show()
+    sys.exit(app.exec_())

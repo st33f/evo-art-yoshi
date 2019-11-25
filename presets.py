@@ -35,17 +35,35 @@ def create_preset(preset_name, config_path=DEFAULT_CONFIG_DIR_PATH):
     save_config(preset_path, config)
 
 
-def load_config(config_path=MASTER_CONFIG_PATH):  # loads .json config file for a preset
+def load_config(config_path=MASTER_CONFIG_PATH):
 
-    with open(config_path + 'config.json') as f:
-        config = json.load(f)
+    # loads .json config file
+
+    done = False
+    while not done:
+        try:
+            with open(config_path + 'config.json') as f:
+                config = json.load(f)
+            done = True
+        except:
+            print(f"loading from {path} failed.")
 
     return config
 
 
 def save_config(path, config):
-    with open(path + 'config.json', 'w') as fp:
-        json.dump(config, fp)
+
+    # saves .json config file
+
+    done = False
+    while not done:
+        try:
+            with open(path + 'config.json', 'w') as fp:
+                json.dump(config, fp)
+            done = True
+        except:
+            print(f"saving under {path} failed.")
+
 
 
 def create_data_structure(preset_path, config):
