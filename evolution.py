@@ -79,7 +79,7 @@ def initialize(preset_config):
     toolbox.register("mutate", tools.mutPolynomialBounded, eta=preset_config['mut_eta'], low=0., up=1., indpb=preset_config['mut_indpb'])
     # toolbox.register("mutate", tools.mutGaussian, mu=0.5, sigma=0.1, indpb=0.05)
     # toolbox.register("select", tools.selNSGA2)
-    toolbox.register("select", tools.selWorst)
+    toolbox.register("select", tools.selBest)
 
     return toolbox
 

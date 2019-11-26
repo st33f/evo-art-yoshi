@@ -54,7 +54,7 @@ def make_phenotype(genes, nature, config_dict):
     Output: indexed pandas table of phenes
     """
 
-    natures = ['bass', 'high_perc', 'low_perc', 'synth']
+    natures = ['bass', 'guitar', 'hat', 'kick', 'perc', 'snare', 'synth']
 
     # mapping for BASSES
     if natures[nature] == "bass":
@@ -86,15 +86,46 @@ def make_phenotype(genes, nature, config_dict):
                      pitch=0#int(genes['rootnote'] * 6 - 3)
                      )
 
-    # mapping for HIGH_PERCS
-    elif natures[nature] == "high_perc":
+    # mapping for GUITAR
+    elif natures[nature] == "guitar":
 
         phenotype = dict(nature=natures[nature],
                          rootnote=int(genes['rootnote'] * 12 + 24),
                          rootoctave=int(genes['rootoctave'] * 3 + 3),
                          order=int(genes['order'] * 9 + 3),
                          #number=int(genes['number'] * 3 + 1),
-                         number=int(genes['number'] * 3 + 1),
+                         number=int(genes['number'] * 4 + 1),
+                         bpm=int(config_dict['bpm_base']*2**int(genes['bpm']*3)),
+                         total_offset=(1/8)* int(genes['total_offset'] * 8) * 0.5**int(genes['bpm']*3),
+                         initial_offset=0.5,#(1/8) * int(genes['initial_offset'] * 8) * 1**int(genes['bpm']*3),
+                         red=int(genes['red'] * 155 + 100),
+                         green=int(genes['green'] * 155 + 100),
+                         blue=255,#int(genes['blue'] * 155 + 100),
+                         instrument=int(genes['instrument']*4),
+                         # this is all relevant for a synth
+                         amp=round(genes['amp'] * 0.5 + 0.5, 2),
+                         cutoff=int(genes['cutoff'] * 50 + 50),
+                         pan=round(genes['pan'] - 0.5, 2),
+                         attack=0, #round(genes['attack'] / 2, 2),
+                         release=round(genes['release'], 2),
+                         mod_range=int(genes['mod_range'] * 10 + 2),
+                         mod_phase=round(genes['mod_phase'] * .7 + .1, 2),
+                         #effect stuff
+                         mix_reverb=round(genes['mix_reverb'] * .5 + .5, 2),
+                         mix_echo=round(genes['mix_echo'] * .5, 2),
+                         # Now the sample related stuff
+                         pitch=int(genes['rootnote'] * 12 - 18)
+                         )
+
+    # mapping for HI-HATS
+    elif natures[nature] == "hat":
+
+        phenotype = dict(nature=natures[nature],
+                         rootnote=int(genes['rootnote'] * 12 + 24),
+                         rootoctave=int(genes['rootoctave'] * 3 + 3),
+                         order=int(genes['order'] * 9 + 3),
+                         #number=int(genes['number'] * 3 + 1),
+                         number=int(genes['number'] * 2 + 2),
                          bpm=int(config_dict['bpm_base']*2**int(genes['bpm']*3)),
                          total_offset=(1/8)* int(genes['total_offset'] * 8) * 0.5**int(genes['bpm']*3),
                          initial_offset=(1/8) * int(genes['initial_offset'] * 8) * 1**int(genes['bpm']*3),
@@ -117,18 +148,78 @@ def make_phenotype(genes, nature, config_dict):
                          pitch=int(genes['rootnote'] * 12 - 6)
                          )
 
-    # mapping for LOW PERC
-    elif natures[nature] == "low_perc":
+    # mapping for KICK
+    elif natures[nature] == "kick":
+
+        phenotype = dict(nature=natures[nature],
+                         rootnote=int(genes['rootnote'] * 12 + 24),
+                         rootoctave=int(genes['rootoctave'] * 3 + 3),
+                         order=int(genes['order'] * 3 + 3),
+                         number=int(genes['number'] * 2 + 1),
+                         #number=1,
+                         bpm=int(config_dict['bpm_base']*2**int(genes['bpm']*3)),
+                         total_offset=0,#(1/4)* int(genes['total_offset'] * 4) * 0.5**int(genes['bpm']*3),
+                         initial_offset=0.5,#(1/8) * int(genes['initial_offset'] * 8) * 1**int(genes['bpm']*3),
+                         red=int(genes['red'] * 155 + 100), green=int(genes['green'] * 155 + 100),
+                         blue=int(genes['blue'] * 155 + 100),
+                         instrument=int(genes['instrument']*4),
+                         # this is all relevant for a synth
+                         amp=round(genes['amp'] * 0.5 + 0.5, 2),
+                         cutoff=100,#int(genes['cutoff'] * 30 + 70),
+                         pan=0,#round(genes['pan'] - 0.5, 2),
+                         attack=0, #round(genes['attack'] / 2, 2),
+                         release=1,#round(genes['release'], 2),
+                         mod_range=int(genes['mod_range'] * 10 + 2),
+                         mod_phase=round(genes['mod_phase'] * .7 + .1, 2),
+                         #effect stuff
+                         mix_reverb=round(genes['mix_reverb'] * .3 + .1, 2),
+                         mix_echo=round(genes['mix_echo'] * .6, 2),
+                         # Now the sample related stuff
+                         pitch=0#int(genes['rootnote'] * 6 - 3)
+                         )
+
+    # mapping for PERCS
+    elif natures[nature] == "perc":
 
         phenotype = dict(nature=natures[nature],
                          rootnote=int(genes['rootnote'] * 12 + 24),
                          rootoctave=int(genes['rootoctave'] * 3 + 3),
                          order=int(genes['order'] * 9 + 3),
                          #number=int(genes['number'] * 3 + 1),
-                         number=1,
+                         number=int(genes['number'] * 3 + 1),
                          bpm=int(config_dict['bpm_base']*2**int(genes['bpm']*3)),
                          total_offset=(1/4)* int(genes['total_offset'] * 4) * 0.5**int(genes['bpm']*3),
-                         initial_offset=0,#(1/8) * int(genes['initial_offset'] * 8) * 1**int(genes['bpm']*3),
+                         initial_offset=(1/4) * int(genes['initial_offset'] * 4) * 1**int(genes['bpm']*3),
+                         red=int(genes['red'] * 155 + 100),
+                         green=int(genes['green'] * 155 + 100),
+                         blue=255,#int(genes['blue'] * 155 + 100),
+                         instrument=int(genes['instrument']*4),
+                         # this is all relevant for a synth
+                         amp=round(genes['amp'] * 0.2 + 0.8, 2),
+                         cutoff=int(genes['cutoff'] * 10 + 90),
+                         pan=round(genes['pan'] - 0.5, 2),
+                         attack=0, #round(genes['attack'] / 2, 2),
+                         release=round(genes['release'], 2),
+                         mod_range=int(genes['mod_range'] * 10 + 2),
+                         mod_phase=round(genes['mod_phase'] * .7 + .1, 2),
+                         #effect stuff
+                         mix_reverb=round(genes['mix_reverb'] * .5 + .5, 2),
+                         mix_echo=round(genes['mix_echo'] * .5, 2),
+                         # Now the sample related stuff
+                         pitch=int(genes['rootnote'] * 6 - 3)
+                         )
+
+    # mapping for SNARE
+    elif natures[nature] == "snare":
+
+        phenotype = dict(nature=natures[nature],
+                         rootnote=int(genes['rootnote'] * 12 + 24),
+                         rootoctave=int(genes['rootoctave'] * 3 + 3),
+                         order=int(genes['order'] * 3 + 3),
+                         number=int(genes['number'] * 2 + 1),
+                         bpm=int(config_dict['bpm_base']*2**int(genes['bpm']*3)),
+                         total_offset=(1/4)* int(genes['total_offset'] * 4) * 0.5**int(genes['bpm']*3),
+                         initial_offset=0.5,#(1/8) * int(genes['initial_offset'] * 8) * 1**int(genes['bpm']*3),
                          red=int(genes['red'] * 155 + 100), green=int(genes['green'] * 155 + 100),
                          blue=int(genes['blue'] * 155 + 100),
                          instrument=int(genes['instrument']*4),
@@ -146,6 +237,8 @@ def make_phenotype(genes, nature, config_dict):
                          # Now the sample related stuff
                          pitch=int(genes['rootnote'] * 6 - 3)
                          )
+
+
     # mapping for SYNTH
     elif natures[nature] == "synth":
 

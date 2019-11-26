@@ -120,8 +120,11 @@ def select_genes(preset_path, indices=[[0],[0],[0],[0]]):
         file = files[i]
         data = load_genepool(file)
         for j in index:
+            # get configs
+            preset_path = read_preset_path()
+            preset_config = load_config(preset_path)
             gene = data.iloc[j,]
-            phenotype = make_phenotype(gene, i)
+            phenotype = make_phenotype(gene, i, preset_config)
             phenotypes.append(phenotype)
 
     current_phenotypes = pd.DataFrame(phenotypes)
@@ -146,7 +149,8 @@ def create_preset_from_config_file(config_dict, name):
     # now create initial folder
     create_folder(f'{new_preset_path}initial')
 
-    natures = ["bass", "high_perc", "low_perc", "synth"]
+    #natures = ["bass", "high_perc", "low_perc", "synth"]
+    natures = ['bass', 'guitar', 'hat', 'kick', 'perc', 'snare', 'synth']
 
     for nature in natures:
         # create initial gene pools
@@ -160,6 +164,6 @@ def create_preset_from_config_file(config_dict, name):
 
 
 
-#config ={"mut_rate": [0.5, 0.5, 0.5, 0.5], "pop_size": 100, "gen_length": 1, "bpm_base": 10, "refresh_rate": 8, "instr_count": [1, 1, 1, 1]}
+#config = {"pop_size": 20, "gen_length": 8, "bpm_base": 20, "refresh_rate": 8, "instr_count": [0, 0, 0, 0, 1, 1, 2], "speed": 1.0, "mut_rate": [0.2, 0.4, 0.4, 0.8, 0.8, 0.8, 0.8], "mut_eta": 0.8, "mut_indpb": 0.2}
 #print(config)
-#create_preset_from_config_file(config, "default_100")
+#create_preset_from_config_file(config, "default_newsounds")

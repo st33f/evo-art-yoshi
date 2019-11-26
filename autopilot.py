@@ -18,55 +18,103 @@ def add_bass(section):
     section[0] += 1
     return section.copy()
 
-def add_high_perc(section):
+def add_guitar(section):
     section[1] += 1
     return section.copy()
 
-def add_low_perc(section):
+def add_hat(section):
     section[2] += 1
     return section.copy()
 
-def add_synth(section):
+def add_kick(section):
     section[3] += 1
     return section.copy()
+
+def add_perc(section):
+    section[4] += 1
+    return section.copy()
+
+def add_snare(section):
+    section[5] += 1
+    return section.copy()
+
+def add_synth(section):
+    section[6] += 1
+    return section.copy()
+
+
 
 def remove_bass(section):
     if section[0] > 0:
         section[0] -= 1
     return section.copy()
 
-def remove_high_perc(section):
+def remove_guitar(section):
     if section[1] > 0:
         section[1] -= 1
     return section.copy()
 
-def remove_low_perc(section):
+def remove_hat(section):
     if section[2] > 0:
         section[2] -= 1
     return section.copy()
 
-def remove_synth(section):
+def remove_kick(section):
     if section[3] > 0:
         section[3] -= 1
     return section.copy()
 
+def remove_perc(section):
+    if section[4] > 0:
+        section[4] -= 1
+    return section.copy()
+
+def remove_snare(section):
+    if section[5] > 0:
+        section[5] -= 1
+    return section.copy()
+
+def remove_synth(section):
+    if section[6] > 0:
+        section[6] -= 1
+    return section.copy()
 
 
 def create_structure():
 
     result = []
-    section = [0, 0, 0, 0]
+    section = [0, 0, 0, 0, 0, 0, 0]
 
+    #result.append(add_guitar(section))
+    result.append(add_kick(section))
+    result.append(add_snare(section))
+    result.append(add_hat(section))
+    result.append(add_perc(section))
     result.append(add_bass(section))
-    result.append(add_synth(section))
-    result.append(add_high_perc(section))
-    result.append(add_low_perc(section))
-    result.append(remove_bass(section))
-    result.append(remove_low_perc(section))
-    result.append(add_synth(section))
-    result.append(add_bass(section))
-    result.append(add_high_perc(section))
 
+    result.append(remove_kick(section))
+    result.append(remove_snare(section))
+
+    result.append(add_synth(section))
+
+    result.append(remove_hat(section))
+    result.append(remove_perc(section))
+
+    result.append(add_synth(section))
+
+    result.append(add_kick(section))
+    result.append(add_snare(section))
+    result.append(add_hat(section))
+    '''
+    #result.append(add_kick(section))
+    result.append(add_guitar(section))
+    result.append(add_guitar(section))
+    #result.append(add_guitar(section))
+
+    #result.append(add_perc(section))
+    result.append(add_snare(section))
+    result.append(add_kick(section))
+    '''
     print(result)
     return result
 
@@ -78,7 +126,9 @@ def main():
     #structure = [[1, 0, 0, 0], [1, 1, 0, 0], [1, 1, 1, 0], [1, 1, 1, 1]]
     #structure = [[0, 0, 0, 1], [0, 0, 0, 2], [0, 0, 0, 3], [0, 0, 0, 4]]
     #structure = [[0, 0, 0, 1], [0, 0, 0, 1], [0, 0, 0, 1], [0, 0, 0, 1]]
+
     structure = create_structure()
+
     done = False
 
     while not done:
