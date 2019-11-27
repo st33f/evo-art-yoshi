@@ -114,7 +114,7 @@ def make_phenotype(genes, nature, config_dict):
                          mix_reverb=round(genes['mix_reverb'] * .5 + .5, 2),
                          mix_echo=round(genes['mix_echo'] * .5, 2),
                          # Now the sample related stuff
-                         pitch=int(genes['rootnote'] * 12 - 18)
+                         pitch=int(genes['rootnote'] * 12 - 30)
                          )
 
     # mapping for HI-HATS
@@ -127,8 +127,8 @@ def make_phenotype(genes, nature, config_dict):
                          #number=int(genes['number'] * 3 + 1),
                          number=int(genes['number'] * 2 + 2),
                          bpm=int(config_dict['bpm_base']*2**int(genes['bpm']*3)),
-                         total_offset=(1/8)* int(genes['total_offset'] * 8) * 0.5**int(genes['bpm']*3),
-                         initial_offset=(1/8) * int(genes['initial_offset'] * 8) * 1**int(genes['bpm']*3),
+                         total_offset=(1/4)* int(genes['total_offset'] * 4) * 0.5**int(genes['bpm']*3),
+                         initial_offset=(1/4) * int(genes['initial_offset'] * 4) * 1**int(genes['bpm']*3),
                          red=int(genes['red'] * 155 + 100),
                          green=int(genes['green'] * 155 + 100),
                          blue=255,#int(genes['blue'] * 155 + 100),
