@@ -47,6 +47,7 @@ def setup_listeners():
         # print("setting up listener for", synth)
         run(f"""in_thread do
   live_loop :{synth}_{i} do
+  use_real_time
     n, c, a, r, p, m = sync "/osc/trigger/{synth}_{i}"
     with_fx :reverb, mix: m, room: 0.5, pre_amp: 0.1 do
       synth :{synth}, note: n, cutoff: c, attack: a, release: r, pan: p
@@ -62,6 +63,7 @@ end""")
         # print('Setting up listener for: ', bass)
         run(f"""in_thread do
   live_loop :{sample_name} do
+  use_real_time
     a, p = sync "/osc/trigger/{sample_name}"
     sample '{base_dir}{bass}', amp: a, pre_amp: 0.6, pitch: p
   end
@@ -73,6 +75,7 @@ end""")
         # print(sample_name)
         run(f"""in_thread do
   live_loop :{sample_name} do
+  use_real_time
     a, m, m_echo, p = sync "/osc/trigger/{sample_name}"
     with_fx :echo, mix: m_echo, pre_mix: 0.2, phase: 1 do
       with_fx :reverb, mix: m, pre_amp: 0.3, room: 0.2 do
@@ -88,6 +91,7 @@ end""")
         # print(sample_name)
         run(f"""in_thread do
   live_loop :{sample_name} do
+  use_real_time
     a, m = sync "/osc/trigger/{sample_name}"
       with_fx :reverb, mix: m, pre_amp: 0.3, room: 0.2 do
         sample '{base_dir}{hat}', amp: a, pre_amp: 0.9
@@ -100,6 +104,7 @@ end""")
         # print(sample)
         # print('Setting up listener for: ', sample)
         run(f"""in_thread do
+        use_real_time
   live_loop :{sample} do
     a, p = sync "/osc/trigger/{sample}"
     sample '{base_dir}{kick}', amp: a, pre_amp: 0.7, pitch: p
@@ -112,6 +117,7 @@ end""")
         # print(sample_name)
         run(f"""in_thread do
   live_loop :{sample_name} do
+  use_real_time
     a, m, m_echo, p = sync "/osc/trigger/{sample_name}"
     with_fx :echo, mix: m_echo, pre_mix: 0.2, phase: 1 do
       with_fx :reverb, mix: m, pre_amp: 0.3, room: 0.2 do
@@ -127,6 +133,7 @@ end""")
         # print(sample_name)
         run(f"""in_thread do
   live_loop :{sample_name} do
+  use_real_time
     a, m, m_echo, p = sync "/osc/trigger/{sample_name}"
     with_fx :echo, mix: m_echo, pre_mix: 0.2, phase: 1 do
       with_fx :reverb, mix: m, pre_amp: 0.3, room: 0.2 do

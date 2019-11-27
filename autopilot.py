@@ -93,7 +93,6 @@ def create_structure():
     result.append(add_hat(section))
     result.append(add_perc(section))
 
-
     result.append(remove_kick(section))
     result.append(remove_snare(section))
     result.append(remove_bass(section))
@@ -106,6 +105,7 @@ def create_structure():
     result.append(remove_guitar(section))
 
     result.append(add_synth(section))
+    result.append(remove_guitar(section))
 
     result.append(add_kick(section))
     result.append(add_snare(section))
