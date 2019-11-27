@@ -145,8 +145,8 @@ class Gui(QDialog):
                 done = True
             except:
                 print("save master config failed")
-            
-            
+
+
     """
     
     def create_top_layout(self):
