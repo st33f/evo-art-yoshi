@@ -127,7 +127,7 @@ def main():
             for mutant in offspring:
                 if random.random() < mutpb[i]:
                     toolbox.mutate(mutant)
-                    del mutant.fitness.values
+                del mutant.fitness.values
 
             # fitness assignment for each population // reworked
             offspring_fit = pd.DataFrame(offspring, columns=gen_cols)
@@ -141,6 +141,8 @@ def main():
             pop_phenotypes = pd.DataFrame(pop_offspring, columns=phen_cols)
 
             fitnesses = evaluation(pop_phenotypes, optimum, toolbox)
+
+            #print(fitnesses)
 
             # for some stupid reason, not printing here will mean the code doesn't work (WTF? python 3 issue i think)
 
