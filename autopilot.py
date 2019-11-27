@@ -85,26 +85,34 @@ def create_structure():
     result = []
     section = [0, 0, 0, 0, 0, 0, 0]
 
-    #result.append(add_guitar(section))
+    result.append(add_guitar(section))
+    result.append(add_bass(section))
+
     result.append(add_kick(section))
     result.append(add_snare(section))
     result.append(add_hat(section))
     result.append(add_perc(section))
-    result.append(add_bass(section))
+
 
     result.append(remove_kick(section))
     result.append(remove_snare(section))
+    result.append(remove_bass(section))
 
+    result.append(add_guitar(section))
     result.append(add_synth(section))
 
     result.append(remove_hat(section))
     result.append(remove_perc(section))
+    result.append(remove_guitar(section))
 
     result.append(add_synth(section))
 
     result.append(add_kick(section))
     result.append(add_snare(section))
     result.append(add_hat(section))
+    result.append(remove_kick(section))
+    result.append(remove_snare(section))
+
     '''
     #result.append(add_kick(section))
     result.append(add_guitar(section))
