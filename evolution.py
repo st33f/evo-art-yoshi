@@ -40,6 +40,7 @@ from itertools import repeat
 def initIndividual(icls, content):
     return icls(content)
 
+
 def initPopulation(pcls, ind_init, filename):
     contents = []
     df = load_genepool(filename)
@@ -55,18 +56,19 @@ def evaluation(population, optimum, toolbox):
     # then score every individual in pop
     subset = ['order']
 
-    opt = optimum.loc[:,subset].values
+    opt = [12] #optimum.loc[:,subset].values
     pop = population.loc[:,subset].values
 
     fitnesses = map(toolbox.evaluate, pop, repeat(opt))
-    #print(list(fitnesses))
-    return fitnesses
+    fits = list(fitnesses).copy()
+
+    return fits
 
 
 def initialize(preset_config):
 
     # DEAP stuff
-    creator.create("FitnessMax", base.Fitness, weights=(0.00,))
+    creator.create("FitnessMax", base.Fitness, weights=(1.00,))
     creator.create("Individual", list, fitness=creator.FitnessMax)
 
     toolbox = base.Toolbox()
@@ -79,7 +81,10 @@ def initialize(preset_config):
     toolbox.register("mutate", tools.mutPolynomialBounded, eta=preset_config['mut_eta'], low=0., up=1., indpb=preset_config['mut_indpb'])
     # toolbox.register("mutate", tools.mutGaussian, mu=0.5, sigma=0.1, indpb=0.05)
     # toolbox.register("select", tools.selNSGA2)
-    toolbox.register("select", tools.selBest)
+    toolbox.register("parent_select", tools.selWorst)
+    toolbox.register("survivor_select", tools.selWorst)
+    toolbox.register("playing_select", tools.selWorst)
+
 
     return toolbox
 
@@ -118,43 +123,54 @@ def main():
 
         for i, pop in enumerate(pops):
 
+            n = len(pop)
             # Select the next generation individuals
-            offspring = toolbox.select(pop, len(pop))
+            offspring = toolbox.parent_select(pop, 3)
+
+            print(offspring)
 
             # Clone the selected individuals
             offspring = list(map(toolbox.clone, offspring))
 
+            children = []
             for mutant in offspring:
                 if random.random() < mutpb[i]:
                     toolbox.mutate(mutant)
-                del mutant.fitness.values
+                    #del mutant.fitness.values
+                    children.append(mutant)
+
+            print(pop)
+
+            new_pop = pop + children
 
             # fitness assignment for each population // reworked
-            offspring_fit = pd.DataFrame(offspring, columns=gen_cols)
-            offspring_dict = offspring_fit.to_dict(orient="records")
+            pop_fit = pd.DataFrame(new_pop, columns=gen_cols)
+            pop_dict = pop_fit.to_dict(orient="records")
 
-            pop_offspring = []
+            pop_phenotypes = []
 
-            for child in offspring_dict:
-                pop_offspring.append(make_phenotype(child, i, preset_config))
+            for ind in pop_dict:
+                pop_phenotypes.append(make_phenotype(ind, i, preset_config))
 
-            pop_phenotypes = pd.DataFrame(pop_offspring, columns=phen_cols)
+            pop_phenotypes_df = pd.DataFrame(pop_phenotypes, columns=phen_cols)
 
-            fitnesses = evaluation(pop_phenotypes, optimum, toolbox)
+            fitnesses = evaluation(pop_phenotypes_df, optimum, toolbox)
 
-            #print(fitnesses)
+            print(fitnesses)
 
-            # for some stupid reason, not printing here will mean the code doesn't work (WTF? python 3 issue i think)
+            print(new_pop)
 
-            print(list(zip(offspring, fitnesses)))
+            for j, ind in enumerate(new_pop):
+                ind.fitness.values = (fitnesses[j],)
 
-            for ind, fit in zip(offspring, list(fitnesses)):
-                ind.fitness.values = fit
+            #pop = [(ind, (fitnesses[j],)) for j, ind in enumerate(new_pop)]
 
-            pop[:] = offspring
+            #print(pop)
 
-            # save new populations to respective csvs
-            pop_genes = pd.DataFrame(pop, columns=gen_cols)
+            new_pop = toolbox.survivor_select(new_pop, n)
+
+            # save new populations to respective csv file
+            pop_genes = pd.DataFrame(new_pop, columns=gen_cols)
 
             save_complete = False
             while not save_complete:
@@ -165,8 +181,9 @@ def main():
                     print(f"saving {files[i]} failed.")
 
             # selection for next_play using NSGA2
-            best_genes = toolbox.select(pop, int(preset_config['instr_count'][i]))
+            best_genes = toolbox.playing_select(new_pop, int(preset_config['instr_count'][i]))
             best_genes = pd.DataFrame(best_genes, columns=gen_cols)
+            print(best_genes)
 
             # convert next play to phenotype and save as play.csv
             best_phenotypes = gen2phen(best_genes, phen_cols, i, preset_config)
