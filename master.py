@@ -46,6 +46,6 @@ if __name__ == '__main__':
     geo_thread.terminate()
     evo_thread.terminate()
     config_thread.terminate()
-    autopilot_thread.terminate()
+    # autopilot_thread.terminate()
 
 

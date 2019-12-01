@@ -25,8 +25,9 @@ todo's:
 - distance metric is very basic, variables are not scaled or weighed in any way.s
 """
 
-from math import *
 import numpy as np
+import pandas as pd
+from math import *
 from presets import *
 
 preset_path = read_preset_path()
@@ -78,34 +79,109 @@ def compute_optimum(playing, phen_cols, method="mean"):
     elif method == "instr_optima":
         raise NotImplementedError()
 
-
     df = pd.DataFrame([current_optimum.tolist()], columns=phen_cols)
     return df
 
 
-def age_check(playing, pops):
-    """Function returns either 1 or 0 for each individual in each population, depending on whether it is present in
-    the 'playing' dataframe"""
-    raise NotImplementedError()
-    return ages
+def update_age(age, next_play, verbose=False):
+    """Update the age values based on comparison between the previous and current playing.csv. Returns updated ages.
+    NOTE: make sure preset_path is being read correctly."""
+
+    old_play = pd.read_csv(f'{preset_path}current/playing.csv').drop('Unnamed: 0', axis=1)
+    play_changed = - next_play.eq(old_play.iloc[:len(next_play),]).all(axis=1)
+
+    # if new items are added, extend the age list
+    age = pd.concat([age, pd.DataFrame({'age': [0] * (len(next_play) - len(old_play))})])
+
+    age[play_changed] = 0
+    age += 1
+
+    if verbose is True:
+        print(age)
+
+    return age
 
 
-def symmetry(playing, pops):
-    '''
-    symmetry against what is currently playing
-    could be implemented using the modulo operator
-    '''
-    raise NotImplementedError()
-    return symmetry
+def symmetry(ind_order, playing):
+
+    fitnesses_symm = []
+    ind_order = int(ind_order)
+
+    play_orders = playing.loc[:, 'order']
+
+    tuples = [(min(x, ind_order), max(x, ind_order)) for x in play_orders]
+    scores = rhythm_eval(tuples)
+    fitness_symm = sum(scores)
+
+    return fitness_symm
+
+
+def rhythm_eval(tuples):
+    """
+    Types of polyrhythms (higher score -> worse):
+    - whole: score 0
+    - half: score 1
+    - quarter/third: score 2
+    - eight/tenth: score 5
+    - worse: score 10
+    """
+
+    scores = []
+
+    for a, b in tuples:
+        if (a/b) % 1 == 0:  # if whole
+            score = 0
+        elif (a/b) % 0.5 == 0:  # if half
+            score = 1
+        elif ((a/b) % 0.25 == 0) or (float(int((a/b)*100)) % 0.33 == 0):  # if quarter or third
+            score = 2
+        elif (a/b) % 0.125 == 0 or (a/b) % 0.1 == 0:  # if eighth or tenth
+            score = 5
+        else:  # everything else
+            score = 10
+
+        scores.append(score)
+
+    return scores
+
 
 def proportion(playing, pops):
-    '''
+    """
     proportion of specific subset (i.e. order) to what is currently playing.
     could also be seen as symmetry of this proportion
 
-    '''
+    """
     raise NotImplementedError()
     return proportion
 
 
+def scramble_all(preset_path, subset=['order']):
+    """Testing function that scrambles all populations and playing.csv"""
 
+    files = [file.replace('\\', '/') for file in glob.glob(preset_path + 'current/*.csv') if 'playing' not in file]
+    for file in files:
+        new = scramble(pd.read_csv(file), subset).drop('Unnamed: 0', axis=1)
+        new.to_csv(file)
+
+    new = scramble_playing(pd.read_csv(f'{preset_path}current/playing.csv'), subset).drop('Unnamed: 0', axis=1)
+    new.to_csv(f'{preset_path}current/playing.csv')
+
+
+def scramble(population, subset):
+    """Function for testing, scrambles the order numbers in the population"""
+
+    population.loc[:, subset] = np.random.uniform(0, 1, len(population.loc[:, subset]))
+
+    return population
+
+
+def scramble_playing(playing, subset):
+    """same as above but for playing.csv.
+    NOTE: this only works for order right now."""
+
+    playing.loc[:, subset] = np.random.randint(3, 12, len(playing.loc[:, subset]))
+
+    return playing
+
+
+scramble_all(preset_path)

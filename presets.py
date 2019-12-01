@@ -144,7 +144,7 @@ def create_preset_from_config_file(config_dict, name):
     create_folder(new_preset_path)
 
     # place config.json in folder
-    save_config(new_preset_path, config)
+    save_config(new_preset_path, config_dict)
 
     # now create initial folder
     create_folder(f'{new_preset_path}initial')
@@ -162,8 +162,6 @@ def create_preset_from_config_file(config_dict, name):
     select_genes(new_preset_path, indices)
 
 
-
-
 #config = {"pop_size": 20, "gen_length": 8, "bpm_base": 20, "refresh_rate": 8, "instr_count": [0, 0, 0, 0, 1, 1, 2], "speed": 1.0, "mut_rate": [0.2, 0.4, 0.4, 0.8, 0.8, 0.8, 0.8], "mut_eta": 0.8, "mut_indpb": 0.2}
 #print(config)
-#create_preset_from_config_file(config, "default_newsounds")
+# create_preset_from_config_file(config, "tommy_test")
