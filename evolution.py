@@ -57,7 +57,7 @@ def evaluation(playing, age_col, population, optimum, toolbox, dist_weight=1.0, 
 
     fitnesses_dist = map(toolbox.evaluate_dist, pop, repeat(opt))
     fitnesses_symm = map(toolbox.evaluate_symm, pop, repeat(playing))
-    fitnesses_age  = list(age_col.values) + [-5] * (len(pop) - len(age_col.values))
+    fitnesses_age  = list(age_col.values) + [0] * (len(pop) - len(age_col.values))
 
     fitnesses_dist = [i * dist_weight for i in fitnesses_dist]
     fitnesses_symm = [i * symm_weight for i in fitnesses_symm]
@@ -117,10 +117,8 @@ def main():
     preset_config = load_config(preset_path)
     files = [file.replace('\\', '/') for file in glob.glob(preset_path + 'current/*.csv') if 'playing' not in file]
 
-    ages = pd.DataFrame(np.zeros([preset_config['pop_size'], len(files)], dtype='int'),
-                        columns=[name.split('/')[-1].split('.')[0] for name in files])
-
-    test_df = pd.DataFrame()
+    natures = ['bass', 'guitar', 'hat', 'kick', 'perc', 'snare', 'synth']
+    ages = pd.DataFrame(np.zeros([preset_config['pop_size'], len(files)], dtype='int'), columns=natures)
 
     done = False
     while not done:
@@ -152,7 +150,7 @@ def main():
 
             n = len(pop)
             # Select the next generation individuals
-            offspring = toolbox.parent_select(shuffle(pop), 20)
+            offspring = toolbox.parent_select(shuffle(pop), n)
 
             # Clone the selected individuals
             offspring = list(map(toolbox.clone, offspring))
@@ -182,7 +180,6 @@ def main():
 
             for j, ind in enumerate(new_pop):
                 ind.fitness.values = (fitnesses[j],)
-                print(ind.fitness.values)
 
             selected = toolbox.survivor_select(shuffle(new_pop), n)
             new_pop = insert(selected, pop)  # prevent population from being shuffled
@@ -213,8 +210,7 @@ def main():
             ages.iloc[:,i] += age_table  # increase age of present genes
             ages.iloc[:,i] *= age_table  # reset departed genes to 0
 
-            # print(fitnesses)
-            print(ages)
+        print(ages)
 
         save_complete = False
         while not save_complete:

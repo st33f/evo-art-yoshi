@@ -1,1 +1,1 @@
-{"pop_size": 20, "gen_length": 1, "bpm_base": 20, "refresh_rate": 1, "instr_count": [10, 0, 0, 0, 0, 0, 0], "speed": 1.0, "mut_rate": [0.5, 0.9, 0.9, 0.9, 0.9, 0.9, 0.9], "mut_eta": 0.5, "mut_indpb": 0.8}
+{"pop_size": 20, "gen_length": 1, "bpm_base": 20, "refresh_rate": 1, "instr_count": [1, 0, 0, 0, 1, 1, 1], "speed": 1.0, "mut_rate": [0.5, 0.9, 0.9, 0.9, 0.9, 0.9, 0.9], "mut_eta": 0.5, "mut_indpb": 0.8}
