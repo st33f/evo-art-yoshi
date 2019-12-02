@@ -131,8 +131,6 @@ def main():
         preset_config = load_config(preset_path)
         playing_path = f'{preset_path}current/playing.csv'
 
-        files = [file.replace('\\', '/') for file in glob.glob(preset_path + 'current/*.csv') if 'playing' not in file]
-
         toolbox = initialize(preset_config)
 
         phen_cols = [x for x in load_genepool(playing_path).columns]
