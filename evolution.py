@@ -1,17 +1,12 @@
 """
 New version of evolution.py, which now evolves separate populations rather than one main.
 
-Been thinking a bit about what selection etc actually means. In our implementation, there basically is no selection at
-all, since we are using a generational model with a comma strategy. There is an equal number of offspring produced
-to the amount of parents, which are all replaced (some offspring are left unmutated, but this is still technically
-generational). Thus, no parent selection or survivor selection is enforced in the populations. Selection does come
-into play for currently playing genes/phenes, but this is not technically evolutionary selection. The structure
-could be changed to have survivor selection, for instance by producing a multitude of offspring and cutting a few
-based on selection.
+todo's
+- Fix insert function (now causing problems for changing pop sizes and selection length)
+- Implement tournament selection properly (requires insert function to be able to process doubles)
+- Improve response to pop size changes (adjust age table size, anticipate other issues)
 
-There's a bunch of redundancy in cloning offspring etc and the program works exactly the same without doing this (just
-mutating the pop directly). I left it in because maybe in the future, it could be more interesting to generate more
-offspring."""
+"""
 
 from deap import base
 from deap import creator
@@ -88,6 +83,7 @@ def initialize(preset_config):
     # toolbox.register("select", tools.selNSGA2)
     toolbox.register("parent_select", tools.selWorst)
     toolbox.register("survivor_select", tools.selWorst)
+    # toolbox.register("survivor_select_tournament", tools.selTournament)
     toolbox.register("playing_select", tools.selWorst)
 
     return toolbox
@@ -99,6 +95,10 @@ def insert(selected, population):
     new_pop = []
     k = 0
     new_genes = [new_gene for new_gene in selected if new_gene not in population]
+
+    for gene in new_genes:
+        print('doubles? (1 means no)' + str(new_genes.count(gene)))
+
     print(f"LEN new_genes = {len(new_genes)}")
     print(len(population))
 
@@ -110,7 +110,6 @@ def insert(selected, population):
             print(f"k = {k}")
             new_pop.append(new_genes[k])
             k += 1
-
 
     return new_pop
 
@@ -156,9 +155,10 @@ def main():
 
         for i, pop in enumerate(pops):
 
-            n = len(pop)
+            n = preset_config['pop_size']
+
             # Select the next generation individuals
-            offspring = toolbox.parent_select(shuffle(pop), 20)
+            offspring = toolbox.parent_select(shuffle(pop), n)
 
             # Clone the selected individuals
             offspring = list(map(toolbox.clone, offspring))
@@ -171,6 +171,8 @@ def main():
                     children.append(mutant)
 
             new_pop = pop + children
+
+            print('len new pop: ' + str(len(new_pop)))
 
             # fitness assignment for each population // reworked
             pop_fit = pd.DataFrame(new_pop, columns=gen_cols)
@@ -189,11 +191,10 @@ def main():
             for j, ind in enumerate(new_pop):
                 ind.fitness.values = (fitnesses[j],)
 
-            #pop = [(ind, (fitnesses[j],)) for j, ind in enumerate(new_pop)]
+            selected = toolbox.survivor_select(shuffle(new_pop), n)
+            new_pop = insert(selected, pop)  # prevent population from being shuffled
 
-            #selected = toolbox.survivor_select(shuffle(new_pop), n)
-            #new_pop = insert(selected, pop)  # prevent population from being shuffled
-            new_pop = toolbox.survivor_select(shuffle(new_pop), n) # implementation without AGE
+            # new_pop = toolbox.survivor_select(shuffle(new_pop), n) # implementation without AGE
 
             # save new populations to respective csv file
             pop_genes = pd.DataFrame(new_pop, columns=gen_cols)
