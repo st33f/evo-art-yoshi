@@ -162,6 +162,6 @@ def create_preset_from_config_file(config_dict, name):
     select_genes(new_preset_path, indices)
 
 
-#config = {"pop_size": 20, "gen_length": 8, "bpm_base": 20, "refresh_rate": 8, "instr_count": [0, 0, 0, 0, 1, 1, 2], "speed": 1.0, "mut_rate": [0.2, 0.4, 0.4, 0.8, 0.8, 0.8, 0.8], "mut_eta": 0.8, "mut_indpb": 0.2}
+#config = {"pop_size": 100, "gen_length": 4, "bpm_base": 15, "refresh_rate": 1, "instr_count": [1, 0, 0, 0, 1, 1, 1], "speed": 1.0, "mut_rate": [0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.8], "mut_eta": 0.9, "mut_indpb": 0.4}
 #print(config)
-# create_preset_from_config_file(config, "tommy_test")
+#create_preset_from_config_file(config, "default_100")

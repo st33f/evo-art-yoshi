@@ -37,8 +37,10 @@ if __name__ == '__main__':
     #autopilot_thread.start()
     time.sleep(0.5)
     geo_thread.start()
-    evo_thread.start()
     config_thread.start()
+    time.sleep(4)
+    evo_thread.start()
+
 
 
     while geo_thread.is_alive() and evo_thread.is_alive() and config_thread.is_alive(): #  and autopilot_thread.is_alive()

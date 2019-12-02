@@ -247,7 +247,7 @@ def make_phenotype(genes, nature, config_dict):
                          rootoctave=int(genes['rootoctave'] * 3 + 3),
                          order=int(genes['order'] * 9 + 3),
                          #number=int(genes['number'] * 3 + 1),
-                         number=int(genes['number'] * 3 + 2),
+                         number=int(genes['number'] * 4 + 2),
                          bpm=int(config_dict['bpm_base']*2**int(genes['bpm']*3)),
                          total_offset=0,#(1/8)* int(genes['total_offset'] * 8) * 0.5**int(genes['bpm']*3),
                          initial_offset=0.33,#(1/4) * int(genes['initial_offset'] * 4) * 1**int(genes['bpm']*3),
