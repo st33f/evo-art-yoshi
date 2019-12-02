@@ -186,7 +186,7 @@ class Gui(QDialog):
 #sys.exit(app.exec_())
 
 def main():
-
+    QApplication.setStyle('Fusion')
     app = QApplication(sys.argv)
     gui = Gui()
     gui.show()

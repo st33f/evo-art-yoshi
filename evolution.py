@@ -146,8 +146,18 @@ def main():
 
             print(list(zip(offspring, fitnesses)))
 
+            #print()
+            #print(zip(offspring, list(fitnesses)))
+
             for ind, fit in zip(offspring, list(fitnesses)):
                 ind.fitness.values = fit
+                print()
+                print()
+                print('This is INDIVIDUAL')
+                print(ind)
+
+            #print("THIS IS OFFSPRING")
+            #print(offspring)
 
             pop[:] = offspring
 
@@ -165,6 +175,11 @@ def main():
             # selection for next_play using NSGA2
             best_genes = toolbox.select(pop, int(preset_config['instr_count'][i]))
             best_genes = pd.DataFrame(best_genes, columns=gen_cols)
+
+            #print('fits')
+            #print(list(fitnesses))
+            #print('bestgenes')
+            #print(best_genes)
 
             # convert next play to phenotype and save as play.csv
             best_phenotypes = gen2phen(best_genes, phen_cols, i, preset_config)
