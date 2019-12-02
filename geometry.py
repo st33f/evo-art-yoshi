@@ -7,7 +7,7 @@ from presets import *
 from autopilot import *
 
 # Set the height and width of the screen
-size = [1200, 700]
+size = [1920, 1080]
 center = [size[0] / 2, size[1] / 2]
 pos_line = [[center[0], 0], center]
 
@@ -147,8 +147,10 @@ def make_polygon(genes, t, delta_t, preset_config, scaling_factor):
 
 
         # get the rotation angles
-        prev_angle = round((t-delta_t) * (360. / genes['order']) * (genes['bpm'] / 60.), 3)
-        current_angle = round(preset_config['speed'] * t * (360. / genes['order']) * (genes['bpm'] / 60.), 3)
+        # prev_angle = round((t-delta_t) * (360. / genes['order']) * (genes['bpm'] / 60.), 3)
+        # current_angle = round(preset_config['speed'] * t * (360. / genes['order']) * (genes['bpm'] / 60.), 3)
+        prev_angle = round((t-delta_t) * 360. * (genes['bpm'] / 400.), 3)
+        current_angle = round(preset_config['speed'] * t * 360. * (genes['bpm'] / 400.), 3)
         prev_angle += (genes['initial_offset'] * i + genes['total_offset']) * (360. / genes['order'])
         current_angle += (genes['initial_offset'] * i + genes['total_offset']) * (360. / genes['order'])
 

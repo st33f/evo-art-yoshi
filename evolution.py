@@ -11,17 +11,7 @@ based on selection.
 
 There's a bunch of redundancy in cloning offspring etc and the program works exactly the same without doing this (just
 mutating the pop directly). I left it in because maybe in the future, it could be more interesting to generate more
-offspring.
-
-todo's
-- could look a bit more at evolution strategy. Maybe adjust the parameters of .mutPolynomialBounded so a mutrate of
-  1 guarantees mutation? This would be a bit more logical and enable more control.
-- Update the evolution strategy to actually use survivor selection! The populations now are completely replaced by
-  a similar amount of offspring. Over-producing offspring could generate more 'favourable' combinations prior to
-  currently playing-selection.
-
-- COULD experiment with 'demes', DEAP's preferred way of implementing multiple populations... but not required.
-"""
+offspring."""
 
 from deap import base
 from deap import creator
@@ -48,7 +38,7 @@ def initPopulation(pcls, ind_init, filename):
     return pcls(ind_init(c) for c in contents)
 
 
-def evaluation(population, optimum, toolbox):
+def evaluation(playing, population, optimum, toolbox, dist_weight=1.0, symm_weight=0.5):
 
     # subset of cols to evaluate
     # calc distance based on subset
@@ -58,15 +48,21 @@ def evaluation(population, optimum, toolbox):
     opt = optimum.loc[:,subset].values
     pop = population.loc[:,subset].values
 
-    fitnesses = map(toolbox.evaluate, pop, repeat(opt))
-    #print(list(fitnesses))
-    return fitnesses
+    fitnesses_dist = map(toolbox.evaluate_dist, pop, repeat(opt))
+    fitnesses_symm = map(toolbox.evaluate_symm, pop, repeat(playing))
+
+    fitnesses_dist = [i * dist_weight for i in fitnesses_dist]
+    fitnesses_symm = [i * symm_weight for i in fitnesses_symm]
+
+    fits = [sum(x) for x in zip(fitnesses_dist, fitnesses_symm)]
+
+    return fits
 
 
 def initialize(preset_config):
 
     # DEAP stuff
-    creator.create("FitnessMax", base.Fitness, weights=(0.00,))
+    creator.create("FitnessMax", base.Fitness, weights=(1.00,))
     creator.create("Individual", list, fitness=creator.FitnessMax)
 
     toolbox = base.Toolbox()
@@ -74,14 +70,18 @@ def initialize(preset_config):
     toolbox.register("individual", initIndividual, creator.Individual)
     toolbox.register("population", initPopulation, list, toolbox.individual)
 
-    toolbox.register("evaluate", distance)
+    toolbox.register("evaluate_dist", distance)
+    toolbox.register("evaluate_symm", symmetry)
     toolbox.register("mate", tools.cxTwoPoint)
     toolbox.register("mutate", tools.mutPolynomialBounded, eta=preset_config['mut_eta'], low=0., up=1., indpb=preset_config['mut_indpb'])
     # toolbox.register("mutate", tools.mutGaussian, mu=0.5, sigma=0.1, indpb=0.05)
     # toolbox.register("select", tools.selNSGA2)
-    toolbox.register("select", tools.selBest)
+    toolbox.register("parent_select", tools.selWorst)
+    toolbox.register("survivor_select", tools.selWorst)
+    toolbox.register("playing_select", tools.selWorst)
 
     return toolbox
+
 
 def main():
 
@@ -112,57 +112,51 @@ def main():
 
         print("-- Generation %i --" % g)
 
-        # if pop == ...: # using an if statement, different rules can be programmed for different instruments
         # Optimum is the mean of the phenotype
         optimum = compute_optimum(load_genepool(f'{preset_path}current/playing.csv'), phen_cols)
 
         for i, pop in enumerate(pops):
 
+            n = len(pop)
             # Select the next generation individuals
             offspring = toolbox.select(pop, len(pop))
 
             # Clone the selected individuals
             offspring = list(map(toolbox.clone, offspring))
 
+            children = []
             for mutant in offspring:
                 if random.random() < mutpb[i]:
                     toolbox.mutate(mutant)
                     del mutant.fitness.values
 
             # fitness assignment for each population // reworked
-            offspring_fit = pd.DataFrame(offspring, columns=gen_cols)
-            offspring_dict = offspring_fit.to_dict(orient="records")
+            pop_fit = pd.DataFrame(new_pop, columns=gen_cols)
+            pop_dict = pop_fit.to_dict(orient="records")
 
-            pop_offspring = []
+            pop_phenotypes = []
 
-            for child in offspring_dict:
-                pop_offspring.append(make_phenotype(child, i, preset_config))
+            for ind in pop_dict:
+                pop_phenotypes.append(make_phenotype(ind, i, preset_config))
 
-            pop_phenotypes = pd.DataFrame(pop_offspring, columns=phen_cols)
+            pop_phenotypes_df = pd.DataFrame(pop_phenotypes, columns=phen_cols)
 
-            fitnesses = evaluation(pop_phenotypes, optimum, toolbox)
+            fitnesses = evaluation(load_genepool(f'{preset_path}current/playing.csv'),
+                                   pop_phenotypes_df, optimum, toolbox)
 
-            # for some stupid reason, not printing here will mean the code doesn't work (WTF? python 3 issue i think)
 
-            print(list(zip(offspring, fitnesses)))
 
-            #print()
-            #print(zip(offspring, list(fitnesses)))
+            for j, ind in enumerate(new_pop):
+                ind.fitness.values = (fitnesses[j],)
 
-            for ind, fit in zip(offspring, list(fitnesses)):
-                ind.fitness.values = fit
-                print()
-                print()
-                print('This is INDIVIDUAL')
-                print(ind)
+            #pop = [(ind, (fitnesses[j],)) for j, ind in enumerate(new_pop)]
 
-            #print("THIS IS OFFSPRING")
-            #print(offspring)
+            #print(pop)
 
-            pop[:] = offspring
+            new_pop = toolbox.survivor_select(new_pop, n)
 
-            # save new populations to respective csvs
-            pop_genes = pd.DataFrame(pop, columns=gen_cols)
+            # save new populations to respective csv file
+            pop_genes = pd.DataFrame(new_pop, columns=gen_cols)
 
             save_complete = False
             while not save_complete:
@@ -173,13 +167,8 @@ def main():
                     print(f"saving {files[i]} failed.")
 
             # selection for next_play using NSGA2
-            best_genes = toolbox.select(pop, int(preset_config['instr_count'][i]))
+            best_genes = toolbox.playing_select(new_pop, int(preset_config['instr_count'][i]))
             best_genes = pd.DataFrame(best_genes, columns=gen_cols)
-
-            #print('fits')
-            #print(list(fitnesses))
-            #print('bestgenes')
-            #print(best_genes)
 
             # convert next play to phenotype and save as play.csv
             best_phenotypes = gen2phen(best_genes, phen_cols, i, preset_config)
@@ -195,6 +184,7 @@ def main():
                 print(f"saving {preset_path}current/playing.csv failed.")
 
         time.sleep(preset_config['gen_length'])
+
 
 
 if __name__ == '__main__':

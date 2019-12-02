@@ -1,15 +1,5 @@
 import time
-import pandas as pd
 from presets import *
-from genetics import *
-import glob
-
-
-
-
-bass_only = [1, 0, 0, 0]
-synth_only = [0, 0, 0, 1]
-high_only = [0, 1, 0, 0]
 
 total_max = 6
 max_bass = 1
@@ -84,10 +74,8 @@ def create_structure():
 
     result = []
     section = [0, 0, 0, 0, 0, 0, 0]
-
-
-    #result.append(add_guitar(section))
-
+    """
+    result.append(add_guitar(section))
     result.append(add_bass(section))
 
     result.append(add_kick(section))
@@ -99,7 +87,7 @@ def create_structure():
     result.append(remove_snare(section))
     result.append(remove_bass(section))
 
-    #result.append(add_guitar(section))
+    result.append(add_guitar(section))
     result.append(add_synth(section))
 
     result.append(remove_hat(section))
@@ -115,8 +103,7 @@ def create_structure():
     result.append(remove_kick(section))
     result.append(remove_snare(section))
 
-
-    '''
+    """
     #result.append(add_kick(section))
     result.append(add_guitar(section))
     result.append(add_guitar(section))
@@ -125,37 +112,134 @@ def create_structure():
     #result.append(add_perc(section))
     result.append(add_snare(section))
     result.append(add_kick(section))
-    '''
+
     print(result)
     return result
 
 
+def create_structure_from_seq(sequence=[[1], [2], [3, 5], [-1], [7], [-3, 4, 6], [-2], [-3, 1], [-4, -6]], last_section=[0, 0, 0, 0, 0, 0, 0]):
+
+    result = []
+    new_section = last_section.copy()
+
+    for batch in sequence:
+        for i in batch:
+            if i == 1:
+                new_section = add_bass(new_section)
+            elif i == -1:
+                new_section = remove_bass(new_section)
+            elif i == 2:
+                new_section = add_guitar(new_section)
+            elif i == -2:
+                new_section = remove_guitar(new_section)
+            elif i == 3:
+                new_section = add_hat(new_section)
+            elif i == -3:
+                new_section = remove_hat(new_section)
+            elif i == 4:
+                new_section = add_kick(new_section)
+            elif i == -4:
+                new_section = remove_kick(new_section)
+            elif i == 5:
+                new_section = add_perc(new_section)
+            elif i == -5:
+                new_section = remove_perc(new_section)
+            elif i == 6:
+                new_section = add_snare(new_section)
+            elif i == -6:
+                new_section = remove_snare(new_section)
+            elif i == 7:
+                new_section = add_synth(new_section)
+            elif i == -7:
+                new_section = add_synth(new_section)
+
+        result.append(new_section.copy())
+
+    print(result)
+    return result
+
+
+def create_sequence(last_section, seq_len=6):
+
+    sequence = []
+
+    for i in range(seq_len):
+        if add_one:
+            sequence.append([choose_addition()])
+        elif add_two:
+            sequence.append([choose_addition(), choose_addition()])
+        elif remove_one:
+            sequence.append([choose_removal()])
+        elif remove_two:
+            sequence.append([choose_removal(), choose_removal()])
+        elif change_one:
+            sequence.append([choose_addition(), choose_removal()])
+        elif do_nothing:
+            sequence.append([])
+
+
+    return sequence
+
+
+def choose_addition():
+
+    included = [1, 0, 0, 1, 0, 1, 1]
+    n = len(included)
+
+    add_range = [x for i, x in enumerate(range(1, -n)) if included[i] > 0]
+
+    add = random.choice(add_range)
+
+    return add
+
+
+def choose_removal():
+
+    included = [1, 0, 0, 1, 0, 1, 1]
+    n = len(included)
+
+    remove_range = [x for i, x in enumerate(range(-1, -n, -1)) if included[i] > 0]
+
+    rem = random.choice(remove_range)
+
+    return rem
 
 
 def main():
 
-    #structure = [[1, 0, 0, 0], [1, 1, 0, 0], [1, 1, 1, 0], [1, 1, 1, 1]]
-    #structure = [[0, 0, 0, 1], [0, 0, 0, 2], [0, 0, 0, 3], [0, 0, 0, 4]]
-    #structure = [[0, 0, 0, 1], [0, 0, 0, 1], [0, 0, 0, 1], [0, 0, 0, 1]]
+    preset_path = read_preset_path()
+    preset_config = load_config(preset_path)
 
-    structure = create_structure()
+    structure = [preset_config['instr_count']]
 
     done = False
-
     while not done:
-        for i in range(len(structure)):
 
-            cur_structure = structure[i]
+        # sequence = create_sequence(last_section=structure[-1], seq_len=5)
+        # structure = create_structure_from_seq(sequence=sequence, last_section=structure[-1])
+        # structure = create_structure_from_seq(last_section=structure[-1])
+        # structure = [[1, 0, 0, 0, 0, 0, 0], [1, 1, 0, 0, 0, 0, 0], [1, 1, 1, 0, 0, 0, 0], [1, 1, 1, 1, 0, 0, 0]]
+        # structure = create_structure()
+        structure = [[1,0,0,0,0,0,0]]
 
+        for section in structure:
+
+            old_preset_path = str(preset_path)
             preset_path = read_preset_path()
-            preset_config = load_config(preset_path)
 
-            new_config = preset_config
-            new_config['instr_count'] = cur_structure
+            if old_preset_path == preset_path:
 
-            save_config(preset_path, new_config)
+                preset_config = load_config(preset_path)
 
-            time.sleep(new_config['refresh_rate'])
+                preset_config['instr_count'] = section
+
+                save_config(preset_path, preset_config)
+
+                time.sleep(preset_config['refresh_rate'])
+
+            else:
+                structure = [preset_config['instr_count']]
+                break
 
 
 if __name__ == '__main__':

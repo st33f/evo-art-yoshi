@@ -114,7 +114,7 @@ def make_phenotype(genes, nature, config_dict):
                          mix_reverb=round(genes['mix_reverb'] * .5 + .5, 2),
                          mix_echo=round(genes['mix_echo'] * .5, 2),
                          # Now the sample related stuff
-                         pitch=int(genes['rootnote'] * 12 - 30)
+                         pitch=int(genes['rootnote'] * 12 - 42)
                          )
 
     # mapping for HI-HATS

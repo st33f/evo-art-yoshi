@@ -79,7 +79,7 @@ end""")
     a, m, m_echo, p = sync "/osc/trigger/{sample_name}"
     with_fx :echo, mix: m_echo, pre_mix: 0.2, phase: 1 do
       with_fx :reverb, mix: m, pre_amp: 0.3, room: 0.2 do
-        sample '{base_dir}{guit}', amp: a, pitch: p, pre_amp: 0.7
+        sample '{base_dir}{guit}', amp: a, pitch: p, pre_amp: 0.5
       end
     end
   end

@@ -1,0 +1,4 @@
+,nature,rootnote,rootoctave,order,number,bpm,total_offset,initial_offset,red,green,blue,instrument,amp,cutoff,pan,attack,release,mod_range,mod_phase,mix_reverb,mix_echo,pitch
+0,hat,27,4,9,3,80,0.1875,0.0,134,213,255,3,0.56,95,0.44,0,0.51,2,0.64,0.94,0.01,-2
+1,hat,27,3,9,3,80,0.1875,0.0,105,252,255,0,0.9,99,0.09,0,0.1,5,0.44,0.68,0.1,-2
+2,hat,27,5,9,2,80,0.1875,0.0,201,190,255,0,0.9,93,-0.46,0,0.02,3,0.24,0.68,0.19,-2

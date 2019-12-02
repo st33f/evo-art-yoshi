@@ -34,18 +34,19 @@ if __name__ == '__main__':
     config_thread = multiprocessing.Process(name='config_thread', target=run_config)#, args=(sin,))
     autopilot_thread = multiprocessing.Process(name='autopilot_thread', target=run_autopilot)
 
-    autopilot_thread.start()
+    #autopilot_thread.start()
+    time.sleep(0.5)
     geo_thread.start()
     evo_thread.start()
     config_thread.start()
 
 
-    while geo_thread.is_alive() and evo_thread.is_alive() and autopilot_thread.is_alive() and config_thread.is_alive():
+    while geo_thread.is_alive() and evo_thread.is_alive() and config_thread.is_alive(): #  and autopilot_thread.is_alive()
         time.sleep(1)
 
     geo_thread.terminate()
     evo_thread.terminate()
     config_thread.terminate()
-    autopilot_thread.terminate()
+    # autopilot_thread.terminate()
 
 
