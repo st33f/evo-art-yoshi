@@ -7,7 +7,7 @@ from presets import *
 from autopilot import *
 
 # Set the height and width of the screen
-size = [1920, 1080]
+size = [800, 800]
 center = [size[0] / 2, size[1] / 2]
 pos_line = [[center[0], 0], center]
 

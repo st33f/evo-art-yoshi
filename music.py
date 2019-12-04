@@ -13,8 +13,9 @@ base_dir = os.getcwd() + '/'
 #synths = ['mod_beep', 'mod_pulse', 'mod_sine', 'growl']
 #synths = ['hollow', 'dark_ambience', 'dull_bell', 'sine']
 #synths = ['sine', 'sine', 'sine', 'sine']
+synths = ['blade', 'blade', 'blade', 'blade']
 #synths = ['piano', 'piano', 'piano', 'piano']
-synths = ['pretty_bell', 'sine', 'fm', 'prophet']
+#synths = ['pretty_bell', 'sine', 'fm', 'prophet']
 
 BASS = [x for x in glob.glob('samples/BASS/*')]
 GUITAR = [x for x in glob.glob('samples/GUITAR/*')]
@@ -77,11 +78,9 @@ end""")
   live_loop :{sample_name} do
   use_real_time
     a, m, m_echo, p = sync "/osc/trigger/{sample_name}"
-    with_fx :echo, mix: m_echo, pre_mix: 0.2, phase: 1 do
-      with_fx :reverb, mix: m, pre_amp: 0.3, room: 0.2 do
+      with_fx :reverb, mix: m, pre_amp: 0.2, room: 0.4 do
         sample '{base_dir}{guit}', amp: a, pitch: p, pre_amp: 0.5
       end
-    end
   end
 end""")
 
@@ -119,8 +118,8 @@ end""")
   live_loop :{sample_name} do
   use_real_time
     a, m, m_echo, p = sync "/osc/trigger/{sample_name}"
-    with_fx :echo, mix: m_echo, pre_mix: 0.2, phase: 1 do
-      with_fx :reverb, mix: m, pre_amp: 0.3, room: 0.2 do
+    with_fx :echo, mix: m_echo, pre_mix: 0.3, phase: 1 do
+      with_fx :reverb, mix: m, pre_amp: 0.3, room: 0.4 do
         sample '{base_dir}{perc}', amp: a, pitch: p, pre_amp: 1
       end
     end
@@ -202,7 +201,9 @@ end""")
   live_loop :{synth}_{i}, sync: :tick do
     n, c, a, r, p, m = sync "/osc/trigger/{synth}_{i}"
     with_fx :reverb, mix: m, room: 0.5, pre_amp: 0.1 do
+    with_fx :distortion do
       synth :{synth}, note: n, cutoff: c, attack: a, release: r, pan: p
+    end
     end
   end
 end""")
