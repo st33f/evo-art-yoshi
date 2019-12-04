@@ -125,7 +125,7 @@ def main():
 
             n = len(pop)
             # Select the next generation individuals
-            offspring = toolbox.parent_select(pop, 3)
+            offspring = toolbox.parent_select(pop, n)
 
             print(offspring)
 
