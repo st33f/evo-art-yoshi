@@ -63,6 +63,13 @@ def main():
         now = time.time()
         t0 = now - start
         delta_t = t0 - t_minus1
+
+        print()
+        print("i:", i)
+        print("t_minus1", t_minus1)
+        print("now     ", now)
+        print("t0      ", t0)
+        print("delta_t ", delta_t)
         #print(f"Delta T GEOMETRY{delta_t}")
 
         if i % (FPS/FPS) == 0:

@@ -7,7 +7,7 @@ import numpy as np
 
 PRESETS_DIR_PATH = 'data/presets/'
 MASTER_CONFIG_PATH = 'data/master_'
-DEFAULT_CONFIG_DIR_PATH = PRESETS_DIR_PATH + 'default/'
+DEFAULT_CONFIG_DIR_PATH = PRESETS_DIR_PATH + 'default_old/'
 
 
 def read_preset_path(master_config_path=MASTER_CONFIG_PATH):
@@ -164,4 +164,4 @@ def create_preset_from_config_file(config_dict, name):
 
 #config = {"pop_size": 100, "gen_length": 4, "bpm_base": 15, "refresh_rate": 1, "instr_count": [1, 0, 0, 0, 1, 1, 1], "speed": 1.0, "mut_rate": [0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.8], "mut_eta": 0.9, "mut_indpb": 0.4}
 #print(config)
-#create_preset_from_config_file(config, "default_100")
+#create_preset_from_config_file(config, "default")

@@ -1,5 +1,6 @@
 from presets import *
 from PyQt5.QtWidgets import *
+from fitness import scramble_all
 #from PyQt5.QtCore import Qt
 import glob
 import os
@@ -12,7 +13,6 @@ class Gui(QDialog):
     def __init__(self, parent=None):
         super(Gui, self).__init__(parent)
         self.setWindowTitle("Evo Art Puppetmaster")
-        self.resize(540, 340)
 
         self.master_config_dict = load_config(MASTER_CONFIG_PATH)
         self.preset_name = self.master_config_dict['preset_path'].split("/")[-2]
@@ -24,6 +24,12 @@ class Gui(QDialog):
         self.mainLayout.addLayout(self.PresetChooser, 1, 0)
 
         self.remake_dict_editor()
+        self.resize(540, 20)
+
+
+        #self.scrambleBtn = QPushButton("Scramble all")
+        #self.scrambleBtn.clicked.connect(lambda: self.save_master_dict(self.master_config_dict, master_config_path))
+
 
     def remake_dict_editor(self):
 

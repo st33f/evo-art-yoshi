@@ -16,6 +16,15 @@ def distance(a, b, method="euclidian"):
     Inputs: two matching numpy arrays
     Output: a fitness value"""
 
+    if len(b) > 1:
+        dif = 100
+        for i in b:
+            if abs(a - i) < dif:
+                dif = abs(a - i)
+                nearest_b = i
+        b = [nearest_b]
+
+
     if method == 'euclidian':
         return sqrt(np.sum((a - b)**2))
     elif method == 'chebyshev':

@@ -55,15 +55,18 @@ def shuffle(pop):
     return random.sample(pop, len(pop))
 
 
-def evaluation(playing, age_col, population, optimum, toolbox, dist_weight=0.0, symm_weight=1.0, age_weight=0.0):
+def evaluation(playing, age_col, population, optimum, toolbox, dist_weight=0.0, symm_weight=1.0, age_weight=0.0, manual_optimum=[]):
 
     # subset of cols to evaluate
     # calc distance based on subset
     # then score every individual in pop
     subset = ['order']
 
-    opt = optimum.loc[:, subset].values
-    #opt = [3]
+    if len(manual_optimum) == 0:
+        opt = optimum.loc[:, subset].values
+    else:
+        opt = manual_optimum
+
     pop = population.loc[:, subset].values
 
     fitnesses_dist = map(toolbox.evaluate_dist, pop, repeat(opt))
@@ -197,7 +200,9 @@ def main():
             pop_phenotypes_df = pd.DataFrame(pop_phenotypes, columns=phen_cols)
 
             fitnesses = evaluation(load_genepool(playing_path), ages.iloc[:,i],
-                                   pop_phenotypes_df, optimum, toolbox)
+                                   pop_phenotypes_df, optimum, toolbox,
+                                   dist_weight=preset_config['dist_weight'], symm_weight=preset_config['symm_weight'],
+                                   age_weight=preset_config['age_weight'], manual_optimum=preset_config['manual_optimum'])
 
             for j, ind in enumerate(new_pop):
                 ind.fitness.values = (fitnesses[j],)
