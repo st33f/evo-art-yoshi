@@ -191,9 +191,9 @@ def main():
 
             #pop = [(ind, (fitnesses[j],)) for j, ind in enumerate(new_pop)]
 
-            #selected = toolbox.survivor_select(shuffle(new_pop), n)
-            #new_pop = insert(selected, pop)  # prevent population from being shuffled
-            new_pop = toolbox.survivor_select(shuffle(new_pop), n) # implementation without AGE
+            selected = toolbox.survivor_select(shuffle(new_pop), n)
+            new_pop = insert(selected, pop)  # prevent population from being shuffled
+            #new_pop = toolbox.survivor_select(shuffle(new_pop), n) # implementation without AGE
 
             # save new populations to respective csv file
             pop_genes = pd.DataFrame(new_pop, columns=gen_cols)
