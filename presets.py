@@ -24,6 +24,10 @@ def read_n_available_samples(master_config_path=MASTER_CONFIG_PATH):
     master_config = load_config(master_config_path)
     return master_config["n_available_samples"]
 
+def read_available_samples(master_config_path=MASTER_CONFIG_PATH):
+    master_config = load_config(master_config_path)
+    return master_config["available_samples"]
+
 
 def create_folder(directory):
     try:
@@ -109,40 +113,40 @@ def create_random_indices(instr_counts):
 
 
 
-def select_genes(preset_path, indices=[[0],[0],[0],[0]]):
+def select_genes(preset_path, natures):
+
+    indices = [[x] for x in range(len(natures))]
+    n_samples = read_n_available_samples(MASTER_CONFIG_PATH)
 
     phenotypes = []
 
     files = glob.glob(f'{preset_path}current/*.csv')
+
     try:
         files.remove(f'{preset_path}current/playing.csv')
     except:
         print()
 
     for i, index in enumerate(indices):
+        print(i)
         if index == []:
             continue
         file = files[i]
         data = load_genepool(file)
         for j in index:
             # get configs
-            preset_path = read_preset_path()
             preset_config = load_config(preset_path)
             gene = data.iloc[j,]
-            phenotype = make_phenotype(gene, i, preset_config)
+            phenotype = make_phenotype(gene, i, preset_config, n_samples)
             phenotypes.append(phenotype)
 
     current_phenotypes = pd.DataFrame(phenotypes)
-    current_phenotypes.to_csv(f'{preset_path}current/playing.csv')
+    current_phenotypes.to_csv(f"{preset_path}current/playing.csv")
 
 
-def create_preset_from_config_file(config_dict, name):
+def create_preset_from_puppetmaster(config_dict, name):
     '''
-    Create complete preset folder from config dict object
-
-    :param config: dictionary containing all config keys and values
-    :param name: name for the preset
-    :return: preset folder with /initial, initialized /current and config.json
+    Create complete preset folder from puppetmaster dict object
     '''
 
     new_preset_path = f'{PRESETS_DIR_PATH}{name}/'
@@ -154,19 +158,21 @@ def create_preset_from_config_file(config_dict, name):
     # now create initial folder
     create_folder(f'{new_preset_path}initial')
 
-    #natures = ["bass", "high_perc", "low_perc", "synth"]
-    natures = ['bass', 'guitar', 'hat', 'kick', 'perc', 'snare', 'synth']
+    natures = config_dict['natures']
 
     for nature in natures:
         # create initial gene pools
         create_initial_genes(f'{new_preset_path}initial/', config_dict, f'{nature}')
 
     initialize_current(new_preset_path)
+    # the following creates playing.csv
+    select_genes(new_preset_path, natures)
 
-    indices = create_random_indices(config_dict['instr_count'])
-    select_genes(new_preset_path, indices)
+
 
 #config = {"pop_size": 10, "gen_length": 4, "bpm_base": 25, "refresh_rate": 2, "max_instr_count": [1, 1, 1, 1, 1, 1, 1], "instr_count": [1, 0, 1, 1, 1, 0, 4], "speed": 1.0, "mut_rate": [0.2, 0.2, 0.2, 0.2, 0.2, 0.2, 0.2], "mut_eta": 0.9, "mut_indpb": 0.1, "dist_weight": 30.0, "symm_weight": 10.0, "age_weight": 1.0, "manual_optimum": [3, 7]}
-#config = {"pop_size": 100, "gen_length": 4, "bpm_base": 15, "refresh_rate": 1, "instr_count": [1, 0, 0, 0, 1, 1, 1], "speed": 1.0, "mut_rate": [0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.8], "mut_eta": 0.9, "mut_indpb": 0.4}
+#config = {"pop_size": 100, "gen_length": 4, "bpm_base": 15, "refresh_rate": 1, "natures": ["SNARE", "KICK", "HAT"], "instr_count": [1, 0, 0, 0, 1, 1, 1], "speed": 1.0, "mut_rate": [0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.8], "mut_eta": 0.9, "mut_indpb": 0.4}
 #print(config)
 #create_preset_from_config_file(config, "default10")
+
+#create_preset_from_puppetmaster(config, 'pup_test')

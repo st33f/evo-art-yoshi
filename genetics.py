@@ -193,7 +193,7 @@ def make_phenotype(genes, nature, config_dict, n_available_samples):
                          red=int(genes['red'] * 155 + 100),
                          green=int(genes['green'] * 155 + 100),
                          blue=255,#int(genes['blue'] * 155 + 100),
-                         instrument=int(genes['instrument']*n_available_samples[4]),
+                         instrument=int(genes['instrument'] * n_available_samples[4]),
                          # this is all relevant for a synth
                          amp=round(genes['amp'] * 0.2 + 0.8, 2),
                          cutoff=int(genes['cutoff'] * 10 + 90),

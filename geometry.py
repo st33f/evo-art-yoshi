@@ -7,7 +7,7 @@ from presets import *
 from autopilot import *
 
 # Set the height and width of the screen
-size = [1920, 1000]
+size = [800, 800]
 CENTER = [size[0] / 2, size[1] / 2]
 pos_line = [[CENTER[0], 0], CENTER]
 
@@ -112,7 +112,7 @@ def main():
             sparks = sparks + new_sparks
 
         if sparks != []:
-            sparks = draw_sparks(screen, sparks)
+            sparks = draw_sparks(screen, sparks, scaling_factor)
 
         # This MUST happen after all the other drawing commands.
         pygame.display.flip()
@@ -127,7 +127,7 @@ def main():
     return
 
 
-def draw_sparks(screen, sparks):
+def draw_sparks(screen, sparks, scaling_factor):
 
     max_age = 20
 
@@ -137,7 +137,7 @@ def draw_sparks(screen, sparks):
         alpha = int(255 * (1 - ((age-1) / max_age)))
         color = (max([0, spark["color"][0] - 5 * age]), max([0, spark["color"][1] - 5 * age]), max([0, spark["color"][2] - 5 * age]))
         m = [int(CENTER[0]), int(CENTER[1]) - int(spark["position"])]
-        radius = 25 - int(age)
+        radius = int(((25 - int(age))*2) * scaling_factor)
         pygame.draw.circle(screen, color, m, radius)
         if age > max_age:
             sparks.remove(spark)

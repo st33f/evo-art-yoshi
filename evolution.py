@@ -113,15 +113,11 @@ def insert(selected, population):
     new_pop = []
     k = 0
     new_genes = [new_gene for new_gene in selected if new_gene not in population]
-    print(f"LEN new_genes = {len(new_genes)}")
-    print(len(population))
 
     for gene in population:
         if gene in selected:
             new_pop.append(gene)
         elif gene not in selected:
-            print(gene)
-            print(f"k = {k}")
             new_pop.append(new_genes[k])
             k += 1
 
