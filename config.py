@@ -24,11 +24,53 @@ class Gui(QDialog):
         self.mainLayout.addLayout(self.PresetChooser, 1, 0)
 
         self.remake_dict_editor()
-        self.resize(540, 20)
+        self.remake_preset_generator()
+
+
+        self.resize(360, 20)
 
 
         #self.scrambleBtn = QPushButton("Scramble all")
         #self.scrambleBtn.clicked.connect(lambda: self.save_master_dict(self.master_config_dict, master_config_path))
+
+    def remake_preset_generator(self):
+
+        try:
+            self.PresetGenerator.deleteLater()
+        except:
+            print()
+
+        self.PresetGenerator = QHBoxLayout()
+
+        self.new_preset_save_btn = QPushButton("Save config as:")
+        self.new_preset_save_btn.setEnabled(False)
+
+        self.new_preset_name_editor = QLineEdit('')
+
+        self.new_preset_save_btn.clicked.connect(lambda: self.make_new_preset())
+        self.new_preset_name_editor.textChanged.connect(lambda: self.check_new_config_name())
+
+        self.PresetGenerator.addWidget(self.new_preset_save_btn)
+        self.PresetGenerator.addWidget(self.new_preset_name_editor)
+
+        self.mainLayout.addLayout(self.PresetGenerator, 4, 0)
+        self.setLayout(self.mainLayout)
+
+
+    def make_new_preset(self):
+
+        name = self.new_preset_name_editor.text()
+
+
+    def check_new_config_name(self):
+
+        name = self.new_preset_name_editor.text()
+        if name in self.preset_names + ['']:
+            self.new_preset_save_btn.setEnabled(False)
+        elif self.check_dict():
+            self.new_preset_save_btn.setEnabled(True)
+
+
 
 
     def remake_dict_editor(self):
@@ -68,11 +110,11 @@ class Gui(QDialog):
 
     def create_preset_chooser(self, master_config_path=MASTER_CONFIG_PATH):
         presets = glob.glob(PRESETS_PATH + '*')
-        preset_names = [x.split(os.sep)[-1] for x in presets]
+        self.preset_names = [x.split(os.sep)[-1] for x in presets]
 
         self.PresetChooser = QHBoxLayout()
         self.presetComboBox = QComboBox()
-        self.presetComboBox.addItems(preset_names)
+        self.presetComboBox.addItems(self.preset_names)
         index = self.presetComboBox.findText(self.preset_name)
 
         if index >= 0:
@@ -122,8 +164,10 @@ class Gui(QDialog):
             for key, value in self.config_dict.items():
                 self.config_dict[key] = eval(self.widgets[key]['lineedit'].text())
             self.saveBtn.setEnabled(True)
+            return True
         except:
             self.saveBtn.setEnabled(False)
+            return False
 
 
     def save_config_dict(self, config_dict, config_path):
@@ -197,6 +241,7 @@ def get_available_samples():
 
     available_samples = {}
     natures = [x for x in glob.glob('samples/*')]
+    natures.sort()
     for nature in natures:
         samples = [x for x in glob.glob(nature+'/*')]
         available_samples[nature.split('/')[-1]] = samples

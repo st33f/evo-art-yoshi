@@ -19,6 +19,7 @@ def read_scaling_factor(master_config_path=MASTER_CONFIG_PATH):
     master_config = load_config(master_config_path)
     return master_config["scaling_factor"]
 
+
 def read_n_available_samples(master_config_path=MASTER_CONFIG_PATH):
     master_config = load_config(master_config_path)
     return master_config["n_available_samples"]
