@@ -177,7 +177,7 @@ def main():
 
         for i, pop in enumerate(pops):
 
-            n = len(pop)
+            n = preset_config["pop_size"]
             # Select the next generation individuals
             offspring = toolbox.parent_select(shuffle(pop), n)
 
@@ -212,10 +212,6 @@ def main():
             for j, ind in enumerate(new_pop):
                 ind.fitness.values = (fitnesses[j],)
 
-            #pop = [(ind, (fitnesses[j],)) for j, ind in enumerate(new_pop)]
-
-            #selected = toolbox.survivor_select(shuffle(new_pop), n)
-            #new_pop = insert(selected, pop)  # prevent population from being shuffled
             new_pop = toolbox.survivor_select(shuffle(new_pop), n) # implementation without AGE
 
             # save new populations to respective csv file
@@ -244,9 +240,6 @@ def main():
 
             ages.iloc[:,i] += age_table  # increase age of present genes
             ages.iloc[:,i] *= age_table  # reset departed genes to 0
-
-            # print(fitnesses)
-        #print(ages)
 
         save_complete = False
         while not save_complete:
