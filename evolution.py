@@ -11,7 +11,17 @@ based on selection.
 
 There's a bunch of redundancy in cloning offspring etc and the program works exactly the same without doing this (just
 mutating the pop directly). I left it in because maybe in the future, it could be more interesting to generate more
-offspring."""
+offspring.
+
+todo's
+- could look a bit more at evolution strategy. Maybe adjust the parameters of .mutPolynomialBounded so a mutrate of
+  1 guarantees mutation? This would be a bit more logical and enable more control.
+- Update the evolution strategy to actually use survivor selection! The populations now are completely replaced by
+  a similar amount of offspring. Over-producing offspring could generate more 'favourable' combinations prior to
+  currently playing-selection.
+
+- COULD experiment with 'demes', DEAP's preferred way of implementing multiple populations... but not required.
+"""
 
 from deap import base
 from deap import creator
@@ -45,15 +55,18 @@ def shuffle(pop):
     return random.sample(pop, len(pop))
 
 
-def evaluation(playing, age_col, population, optimum, toolbox, dist_weight=0.0, symm_weight=1.0, age_weight=0.0):
+def evaluation(playing, age_col, population, optimum, toolbox, dist_weight=0.0, symm_weight=1.0, age_weight=0.0, manual_optimum=[]):
 
     # subset of cols to evaluate
     # calc distance based on subset
     # then score every individual in pop
     subset = ['order']
 
-    opt = optimum.loc[:, subset].values
-    #opt = [3]
+    if len(manual_optimum) == 0:
+        opt = optimum.loc[:, subset].values
+    else:
+        opt = manual_optimum
+
     pop = population.loc[:, subset].values
 
     fitnesses_dist = map(toolbox.evaluate_dist, pop, repeat(opt))
@@ -90,6 +103,7 @@ def initialize(preset_config):
     toolbox.register("survivor_select", tools.selWorst)
     toolbox.register("playing_select", tools.selWorst)
 
+
     return toolbox
 
 
@@ -99,15 +113,11 @@ def insert(selected, population):
     new_pop = []
     k = 0
     new_genes = [new_gene for new_gene in selected if new_gene not in population]
-    print(f"LEN new_genes = {len(new_genes)}")
-    print(len(population))
 
     for gene in population:
         if gene in selected:
             new_pop.append(gene)
         elif gene not in selected:
-            print(gene)
-            print(f"k = {k}")
             new_pop.append(new_genes[k])
             k += 1
 
@@ -120,7 +130,12 @@ def main():
     g = 0  # generation counter
 
     preset_path = read_preset_path()
+    n_available_samples = read_n_available_samples()
     preset_config = load_config(preset_path)
+
+    # scramble all genes randomly
+    fit.scramble_all(preset_path)
+
     files = [file.replace('\\', '/') for file in glob.glob(preset_path + 'current/*.csv') if 'playing' not in file]
 
     natures = ['bass', 'guitar', 'hat', 'kick', 'perc', 'snare', 'synth']
@@ -143,6 +158,8 @@ def main():
         gen_cols = [x for x in load_genepool(playing_path).columns if x not in ['nature', 'pitch']]
 
         # Initializing the populations
+        files = [file.replace('\\', '/') for file in glob.glob(preset_path + 'current/*.csv') if 'playing' not in file]
+
         pops = [toolbox.population(file) for file in files]
 
         mutpb = preset_config['mut_rate']
@@ -158,7 +175,7 @@ def main():
 
             n = len(pop)
             # Select the next generation individuals
-            offspring = toolbox.parent_select(shuffle(pop), 20)
+            offspring = toolbox.parent_select(shuffle(pop), n)
 
             # Clone the selected individuals
             offspring = list(map(toolbox.clone, offspring))
@@ -179,12 +196,14 @@ def main():
             pop_phenotypes = []
 
             for ind in pop_dict:
-                pop_phenotypes.append(make_phenotype(ind, i, preset_config))
+                pop_phenotypes.append(make_phenotype(ind, i, preset_config, n_available_samples))
 
             pop_phenotypes_df = pd.DataFrame(pop_phenotypes, columns=phen_cols)
 
             fitnesses = evaluation(load_genepool(playing_path), ages.iloc[:,i],
-                                   pop_phenotypes_df, optimum, toolbox)
+                                   pop_phenotypes_df, optimum, toolbox,
+                                   dist_weight=preset_config['dist_weight'], symm_weight=preset_config['symm_weight'],
+                                   age_weight=preset_config['age_weight'], manual_optimum=preset_config['manual_optimum'])
 
             for j, ind in enumerate(new_pop):
                 ind.fitness.values = (fitnesses[j],)
@@ -197,7 +216,7 @@ def main():
 
             # save new populations to respective csv file
             pop_genes = pd.DataFrame(new_pop, columns=gen_cols)
-            pop_phenes = gen2phen(pop_genes, phen_cols, i, preset_config)  # used for age calculation
+            pop_phenes = gen2phen(pop_genes, phen_cols, i, preset_config, n_available_samples)  # used for age calculation
 
             save_complete = False
             while not save_complete:
@@ -213,7 +232,7 @@ def main():
             # print(best_genes)
 
             # convert next play to phenotype and save as play.csv
-            best_phenotypes = gen2phen(best_genes, phen_cols, i, preset_config)
+            best_phenotypes = gen2phen(best_genes, phen_cols, i, preset_config, n_available_samples)
             next_play = pd.concat([next_play, best_phenotypes])
 
             # update the population ages
@@ -234,7 +253,6 @@ def main():
                 print(f"saving {preset_path}current/playing.csv failed.")
 
         time.sleep(preset_config['gen_length'])
-
 
 
 if __name__ == '__main__':

@@ -10,10 +10,10 @@ import os
 base_dir = os.getcwd() + '/'
 
 # instruments
-#synths = ['mod_beep', 'mod_pulse', 'mod_sine', 'growl']
-#synths = ['hollow', 'dark_ambience', 'dull_bell', 'sine']
-#synths = ['sine', 'sine', 'sine', 'sine']
-synths = ['blade', 'blade', 'blade', 'blade']
+#synths = [random.choice(['mod_beep', 'mod_pulse', 'mod_sine', 'growl']) for x in range(20)]
+synths = ['mod_sine', 'fm', 'sine', 'sine']
+#synths = ['sine', 'sine', 'sine', 'sine', 'sine', 'sine', 'sine', 'sine', 'sine', 'sine', 'sine', 'sine', 'sine', 'sine', 'sine', 'sine', 'sine', 'sine', 'sine', 'sine', 'sine', 'sine', 'sine', 'sine']
+#synths = ['blade', 'blade', 'blade', 'blade']
 #synths = ['piano', 'piano', 'piano', 'piano']
 #synths = ['pretty_bell', 'sine', 'fm', 'prophet']
 
@@ -159,6 +159,7 @@ def play_sound(phenotype):
         send_message(f"/trigger/{get_sample_name(KICK[phenotype['instrument']])}", phenotype['amp'], phenotype['pitch'])
     elif 'perc' in phenotype['nature']:
         # print(PERC[phenotype['instrument']])
+        print(phenotype)
         send_message(f"/trigger/{get_sample_name(PERC[phenotype['instrument']])}", phenotype['amp'], phenotype['mix_reverb'],
                      phenotype['mix_echo'], phenotype['pitch'])
     elif 'snare' in phenotype['nature']:
