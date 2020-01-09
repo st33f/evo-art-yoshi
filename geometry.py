@@ -7,9 +7,9 @@ from presets import *
 from autopilot import *
 
 # Set the height and width of the screen
-size = [800, 800]
-center = [size[0] / 2, size[1] / 2]
-pos_line = [[center[0], 0], center]
+size = [1920, 1000]
+CENTER = [size[0] / 2, size[1] / 2]
+pos_line = [[CENTER[0], 0], CENTER]
 
 # Set the scaling factor of the visualization between 0.1 and 0.5
 #SCALING_FACTOR = 0.5 # can go
@@ -49,6 +49,9 @@ def main():
     start = time.time()
     now = time.time()
 
+    # for the visuals
+    sparks = []
+
     # Loop until the user clicks the close button.
     done = False
     i = 0
@@ -63,7 +66,7 @@ def main():
         now = time.time()
         t0 = now - start
         delta_t = t0 - t_minus1
-
+        '''
         print()
         print("i:", i)
         print("t_minus1", t_minus1)
@@ -71,6 +74,7 @@ def main():
         print("t0      ", t0)
         print("delta_t ", delta_t)
         #print(f"Delta T GEOMETRY{delta_t}")
+        '''
 
         if i % (FPS/FPS) == 0:
 
@@ -91,7 +95,6 @@ def main():
 
         i += 1
 
-
         for event in pygame.event.get():  # User did something
             if event.type == pygame.QUIT:  # If user clicked close
                 done = True  # Flag that we are done so we exit this loop
@@ -105,7 +108,11 @@ def main():
         # This is where the magic happens
         for phenotype in phenotypes:
             #phenotype = make_phenotype(genes)
-            make_polygon(phenotype, t0, delta_t, preset_config, scaling_factor)
+            new_sparks = make_polygon(phenotype, t0, delta_t, preset_config, scaling_factor)
+            sparks = sparks + new_sparks
+
+        if sparks != []:
+            sparks = draw_sparks(screen, sparks)
 
         # This MUST happen after all the other drawing commands.
         pygame.display.flip()
@@ -120,17 +127,34 @@ def main():
     return
 
 
-def pol2cart(rho, phi, center=center):
+def draw_sparks(screen, sparks):
+
+    max_age = 20
+
+    for spark in sparks:
+        spark["age"] += 1
+        age = spark["age"]
+        alpha = int(255 * (1 - ((age-1) / max_age)))
+        color = (max([0, spark["color"][0] - 5 * age]), max([0, spark["color"][1] - 5 * age]), max([0, spark["color"][2] - 5 * age]))
+        m = [int(CENTER[0]), int(CENTER[1]) - int(spark["position"])]
+        radius = 25 - int(age)
+        pygame.draw.circle(screen, color, m, radius)
+        if age > max_age:
+            sparks.remove(spark)
+
+    return sparks
+
+def pol2cart(rho, phi):
 
     # get cartesian coordinates from polar
 
-    x = center[1] + rho * math.cos(math.radians(phi + 180))
-    y = center[0] - rho * math.sin(math.radians(phi + 180))
+    x = CENTER[1] + rho * math.cos(math.radians(phi + 180))
+    y = CENTER[0] - rho * math.sin(math.radians(phi + 180))
 
     return [y, x]
 
 
-def rotatePoint(polarcorner, angle, center=center):
+def rotatePoint(polarcorner, angle, CENTER=CENTER):
 
     # the name explains this pretty well i think
 
@@ -142,6 +166,8 @@ def rotatePoint(polarcorner, angle, center=center):
 def make_polygon(genes, t, delta_t, preset_config, scaling_factor):
 
     # Now this is where the magic happens...
+    
+    sparks = []
 
     for i in range(genes['number']):
         factor = round(1. / math.cos(math.radians(180./genes['order'])), 3)
@@ -164,15 +190,18 @@ def make_polygon(genes, t, delta_t, preset_config, scaling_factor):
         pos = []
         for o in range(genes['order']):
             polarcorner = [genes['radius'], o*(360/genes['order'])]
-            prev_polarcorner = rotatePoint(polarcorner, prev_angle, center=center)
-            polarcorner = rotatePoint(polarcorner, current_angle, center=center)
+            prev_polarcorner = rotatePoint(polarcorner, prev_angle, CENTER=CENTER)
+            polarcorner = rotatePoint(polarcorner, current_angle, CENTER=CENTER)
             prev_polarcorner[1] = round(prev_polarcorner[1] % 360., 3)
             polarcorner[1] = round(polarcorner[1] % 360., 3)
             delta = abs(polarcorner[1] - prev_polarcorner[1])
             if delta > 180.:
                 play_sound(genes)
+                sparks.append({"position": genes['radius'],
+                               "color": (genes['red'], genes['green'], genes['blue']),
+                               "age": 0})
             corner = pol2cart(polarcorner[0], polarcorner[1])
             pos.append(corner)
         pygame.draw.polygon(screen, (genes['red'], genes['green'], genes['blue']), pos, LINEWIDTH)
 
-    return
+    return sparks

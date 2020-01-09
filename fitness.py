@@ -26,12 +26,15 @@ def distance(a, b, method="euclidian"):
 
 
     if method == 'euclidian':
-        return sqrt(np.sum((a - b)**2))
+        fitness = sqrt(np.sum((a - b)**2))
     elif method == 'chebyshev':
-        return np.max(abs(a - b))
+        fitness = np.max(abs(a - b))
     elif method == 'taxicab':
-        return np.sum((a - b))
+        fitness = np.sum((a - b))
 
+    #print('fit dist:', fitness)
+
+    return fitness
 
 def compute_optimum(playing, phen_cols, method="mean"):
     """
@@ -90,7 +93,8 @@ def symmetry(ind_order, playing):
 
     tuples = [(min(x, ind_order), max(x, ind_order)) for x in play_orders]
     scores = rhythm_eval(tuples)
-    fitness_symm = sum(scores)
+    fitness_symm = sum(scores)/len(playing)
+    #print("fit sym:", fitness_symm)
 
     return fitness_symm
 
@@ -162,5 +166,3 @@ def scramble_playing(playing, subset):
 
     return playing
 
-
-#scramble_all(preset_path)

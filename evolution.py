@@ -134,7 +134,12 @@ def main():
     g = 0  # generation counter
 
     preset_path = read_preset_path()
+    n_available_samples = read_n_available_samples()
     preset_config = load_config(preset_path)
+
+    # scramble all genes randomly
+    fit.scramble_all(preset_path)
+
     files = [file.replace('\\', '/') for file in glob.glob(preset_path + 'current/*.csv') if 'playing' not in file]
 
     natures = ['bass', 'guitar', 'hat', 'kick', 'perc', 'snare', 'synth']
@@ -195,7 +200,7 @@ def main():
             pop_phenotypes = []
 
             for ind in pop_dict:
-                pop_phenotypes.append(make_phenotype(ind, i, preset_config))
+                pop_phenotypes.append(make_phenotype(ind, i, preset_config, n_available_samples))
 
             pop_phenotypes_df = pd.DataFrame(pop_phenotypes, columns=phen_cols)
 
@@ -215,7 +220,7 @@ def main():
 
             # save new populations to respective csv file
             pop_genes = pd.DataFrame(new_pop, columns=gen_cols)
-            pop_phenes = gen2phen(pop_genes, phen_cols, i, preset_config)  # used for age calculation
+            pop_phenes = gen2phen(pop_genes, phen_cols, i, preset_config, n_available_samples)  # used for age calculation
 
             save_complete = False
             while not save_complete:
@@ -231,7 +236,7 @@ def main():
             # print(best_genes)
 
             # convert next play to phenotype and save as play.csv
-            best_phenotypes = gen2phen(best_genes, phen_cols, i, preset_config)
+            best_phenotypes = gen2phen(best_genes, phen_cols, i, preset_config, n_available_samples)
             next_play = pd.concat([next_play, best_phenotypes])
 
             # update the population ages

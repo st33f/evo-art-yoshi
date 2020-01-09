@@ -47,7 +47,7 @@ def random_genome():
     return genes
 
 
-def make_phenotype(genes, nature, config_dict):
+def make_phenotype(genes, nature, config_dict, n_available_samples):
     """
     Function that maps a genepool to a pool of phenotypes.
     Input: indexed pandas table of genes
@@ -70,7 +70,7 @@ def make_phenotype(genes, nature, config_dict):
                      red=int(genes['red'] * 155 + 100),
                      green=255, #int(genes['green'] * 155 + 100),
                      blue=int(genes['blue'] * 155 + 100),
-                     instrument=int(genes['instrument']*4),
+                     instrument=int(genes['instrument']*n_available_samples[0]),
                      # this is all relevant for a synth
                      amp=round(genes['amp'] * 0.5 + 0.5, 2),
                      cutoff=int(genes['cutoff'] * 10 + 90),
@@ -101,7 +101,7 @@ def make_phenotype(genes, nature, config_dict):
                          red=int(genes['red'] * 155 + 100),
                          green=int(genes['green'] * 155 + 100),
                          blue=255,#int(genes['blue'] * 155 + 100),
-                         instrument=int(genes['rootoctave'] * 4),
+                         instrument=int(genes['rootoctave']*n_available_samples[1]),
                          # this is all relevant for a synth
                          amp=round(genes['amp'] * 0.5 + 0.5, 2),
                          cutoff=int(genes['cutoff'] * 50 + 50),
@@ -132,7 +132,7 @@ def make_phenotype(genes, nature, config_dict):
                          red=int(genes['red'] * 155 + 100),
                          green=int(genes['green'] * 155 + 100),
                          blue=255,#int(genes['blue'] * 155 + 100),
-                         instrument=int(genes['instrument']*4),
+                         instrument=int(genes['instrument']*n_available_samples[2]),
                          # this is all relevant for a synth
                          amp=round(genes['amp'] * 0.5 + 0.5, 2),
                          cutoff=int(genes['cutoff'] * 30 + 70),
@@ -162,7 +162,7 @@ def make_phenotype(genes, nature, config_dict):
                          initial_offset=0.5,#(1/8) * int(genes['initial_offset'] * 8) * 1**int(genes['bpm']*3),
                          red=int(genes['red'] * 155 + 100), green=int(genes['green'] * 155 + 100),
                          blue=int(genes['blue'] * 155 + 100),
-                         instrument=int(genes['instrument']*4),
+                         instrument=int(genes['instrument']*n_available_samples[3]),
                          # this is all relevant for a synth
                          amp=round(genes['amp'] * 0.5 + 0.5, 2),
                          cutoff=100,#int(genes['cutoff'] * 30 + 70),
@@ -193,7 +193,7 @@ def make_phenotype(genes, nature, config_dict):
                          red=int(genes['red'] * 155 + 100),
                          green=int(genes['green'] * 155 + 100),
                          blue=255,#int(genes['blue'] * 155 + 100),
-                         instrument=int(genes['instrument']*4),
+                         instrument=int(genes['instrument']*n_available_samples[4]),
                          # this is all relevant for a synth
                          amp=round(genes['amp'] * 0.2 + 0.8, 2),
                          cutoff=int(genes['cutoff'] * 10 + 90),
@@ -222,7 +222,7 @@ def make_phenotype(genes, nature, config_dict):
                          initial_offset=0.5,#(1/8) * int(genes['initial_offset'] * 8) * 1**int(genes['bpm']*3),
                          red=int(genes['red'] * 155 + 100), green=int(genes['green'] * 155 + 100),
                          blue=int(genes['blue'] * 155 + 100),
-                         instrument=int(genes['instrument']*4),
+                         instrument=int(genes['instrument']*n_available_samples[5]),
                          # this is all relevant for a synth
                          amp=round(genes['amp'] * 0.5 + 0.5, 2),
                          cutoff=100,#int(genes['cutoff'] * 30 + 70),
@@ -272,14 +272,14 @@ def make_phenotype(genes, nature, config_dict):
 
     return phenotype
 
-def gen2phen(genotypes, phen_cols, i, config_dict):
+def gen2phen(genotypes, phen_cols, i, config_dict, n_available_samples):
 
     geno_dict = genotypes.to_dict(orient="records")
 
     phenotypes = []
 
     for child in geno_dict:
-        phenotypes.append(make_phenotype(child, i, config_dict))
+        phenotypes.append(make_phenotype(child, i, config_dict, n_available_samples))
 
     phenotypes_df = pd.DataFrame(phenotypes, columns=phen_cols)
     return phenotypes_df

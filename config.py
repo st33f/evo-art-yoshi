@@ -191,8 +191,27 @@ class Gui(QDialog):
 #gui.show()
 #sys.exit(app.exec_())
 
+def get_available_samples():
+
+    master_config_dict = load_config(MASTER_CONFIG_PATH)
+
+    available_samples = {}
+    natures = [x for x in glob.glob('samples/*')]
+    for nature in natures:
+        samples = [x for x in glob.glob(nature+'/*')]
+        available_samples[nature.split('/')[-1]] = samples
+        print(nature, samples)
+    print(available_samples)
+    
+    master_config_dict["available_samples"] = available_samples
+    master_config_dict["n_available_samples"] = [len(x) for x in available_samples.values()]
+
+    save_config(MASTER_CONFIG_PATH, master_config_dict)
+
+
 def main():
 
+    get_available_samples()
     QApplication.setStyle("Fusion")
     app = QApplication(sys.argv)
     gui = Gui()

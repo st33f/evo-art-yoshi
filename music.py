@@ -10,10 +10,10 @@ import os
 base_dir = os.getcwd() + '/'
 
 # instruments
-#synths = ['mod_beep', 'mod_pulse', 'mod_sine', 'growl']
-#synths = ['hollow', 'dark_ambience', 'dull_bell', 'sine']
-#synths = ['sine', 'sine', 'sine', 'sine']
-synths = ['blade', 'blade', 'blade', 'blade']
+#synths = [random.choice(['mod_beep', 'mod_pulse', 'mod_sine', 'growl']) for x in range(20)]
+synths = ['mod_sine', 'fm', 'sine', 'sine']
+#synths = ['sine', 'sine', 'sine', 'sine', 'sine', 'sine', 'sine', 'sine', 'sine', 'sine', 'sine', 'sine', 'sine', 'sine', 'sine', 'sine', 'sine', 'sine', 'sine', 'sine', 'sine', 'sine', 'sine', 'sine']
+#synths = ['blade', 'blade', 'blade', 'blade']
 #synths = ['piano', 'piano', 'piano', 'piano']
 #synths = ['pretty_bell', 'sine', 'fm', 'prophet']
 

@@ -19,6 +19,10 @@ def read_scaling_factor(master_config_path=MASTER_CONFIG_PATH):
     master_config = load_config(master_config_path)
     return master_config["scaling_factor"]
 
+def read_n_available_samples(master_config_path=MASTER_CONFIG_PATH):
+    master_config = load_config(master_config_path)
+    return master_config["n_available_samples"]
+
 
 def create_folder(directory):
     try:
@@ -161,7 +165,7 @@ def create_preset_from_config_file(config_dict, name):
     indices = create_random_indices(config_dict['instr_count'])
     select_genes(new_preset_path, indices)
 
-
+#config = {"pop_size": 10, "gen_length": 4, "bpm_base": 25, "refresh_rate": 2, "max_instr_count": [1, 1, 1, 1, 1, 1, 1], "instr_count": [1, 0, 1, 1, 1, 0, 4], "speed": 1.0, "mut_rate": [0.2, 0.2, 0.2, 0.2, 0.2, 0.2, 0.2], "mut_eta": 0.9, "mut_indpb": 0.1, "dist_weight": 30.0, "symm_weight": 10.0, "age_weight": 1.0, "manual_optimum": [3, 7]}
 #config = {"pop_size": 100, "gen_length": 4, "bpm_base": 15, "refresh_rate": 1, "instr_count": [1, 0, 0, 0, 1, 1, 1], "speed": 1.0, "mut_rate": [0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.8], "mut_eta": 0.9, "mut_indpb": 0.4}
 #print(config)
-#create_preset_from_config_file(config, "default")
+#create_preset_from_config_file(config, "default10")
