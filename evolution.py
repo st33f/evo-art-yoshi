@@ -125,23 +125,26 @@ def insert(selected, population):
     return new_pop
 
 
+
 def main():
 
     g = 0  # generation counter
 
     preset_path = read_preset_path()
+    old_preset_path = preset_path
     n_available_samples = read_n_available_samples()
     preset_config = load_config(preset_path)
+
 
     # scramble all genes randomly
     fit.scramble_all(preset_path)
 
     files = [file.replace('\\', '/') for file in glob.glob(preset_path + 'current/*.csv') if 'playing' not in file]
 
-    natures = ['bass', 'guitar', 'hat', 'kick', 'perc', 'snare', 'synth']
+    #natures = ['bass', 'guitar', 'hat', 'kick', 'perc', 'snare', 'synth']
 
-    ages = pd.DataFrame(np.zeros([preset_config['pop_size'], len(files)], dtype='int'),
-                        columns=natures)
+    ages = pd.DataFrame(np.zeros([preset_config['pop_size'], len(preset_config["natures"])], dtype='int'),
+                        columns=preset_config["natures"])
 
     done = False
     while not done:
@@ -151,6 +154,10 @@ def main():
         preset_path = read_preset_path()
         preset_config = load_config(preset_path)
         playing_path = f'{preset_path}current/playing.csv'
+        if old_preset_path != preset_path:
+            ages = pd.DataFrame(np.zeros([preset_config['pop_size'], len(files)], dtype='int'),
+                                columns=preset_config["natures"])
+        old_preset_path = preset_path
 
         toolbox = initialize(preset_config)
 
@@ -160,7 +167,8 @@ def main():
         # Initializing the populations
         files = [file.replace('\\', '/') for file in glob.glob(preset_path + 'current/*.csv') if 'playing' not in file]
 
-        pops = [toolbox.population(file) for file in files]
+        pops = [toolbox.population(preset_path + f'current/{nature.lower()}.csv') for nature in preset_config["natures"]]
+        #pops = [toolbox.population(file) for file in files]
 
         mutpb = preset_config['mut_rate']
 

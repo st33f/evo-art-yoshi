@@ -38,7 +38,7 @@ def create_folder(directory):
 
 
 def create_preset(preset_name, config_path=DEFAULT_CONFIG_DIR_PATH):
-    preset_path = 'data/presets/' + preset_name + '/'
+    preset_path = 'data/presets/' + preset_name + os.sep
     config = load_config(config_path)
     create_data_structure(preset_path, config)
     save_config(preset_path, config)
@@ -93,7 +93,7 @@ def initialize_current(preset_path):
 
     for file in glob.glob(f'{preset_path}initial/*'):
         data = load_genepool(file)
-        name = file.split('/')[-1]
+        name = file.split(os.sep)[-1]
         save_genepool(data, f'{preset_path}current/{name}')
 
 
@@ -113,9 +113,10 @@ def create_random_indices(instr_counts):
 
 
 
-def select_genes(preset_path, natures):
+def select_genes(preset_path):
+    preset_config = load_config(preset_path)
 
-    indices = [[x] for x in range(len(natures))]
+    indices = [[x] for x in range(len(preset_config["natures"]))]
     n_samples = read_n_available_samples(MASTER_CONFIG_PATH)
 
     phenotypes = []
@@ -127,8 +128,8 @@ def select_genes(preset_path, natures):
     except:
         print()
 
+
     for i, index in enumerate(indices):
-        print(i)
         if index == []:
             continue
         file = files[i]
@@ -136,6 +137,7 @@ def select_genes(preset_path, natures):
         for j in index:
             # get configs
             preset_config = load_config(preset_path)
+
             gene = data.iloc[j,]
             phenotype = make_phenotype(gene, i, preset_config, n_samples)
             phenotypes.append(phenotype)
@@ -162,7 +164,7 @@ def create_preset_from_puppetmaster(config_dict, name):
 
     for nature in natures:
         # create initial gene pools
-        create_initial_genes(f'{new_preset_path}initial/', config_dict, f'{nature}')
+        create_initial_genes(f"{new_preset_path}initial/", config_dict, f"{nature}")
 
     initialize_current(new_preset_path)
     # the following creates playing.csv

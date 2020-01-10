@@ -98,8 +98,8 @@ def make_phenotype(genes, nature, config_dict, n_available_samples):
                          bpm=int(config_dict['bpm_base']*2**int(genes['bpm']*3)),
                          total_offset=(1/8)* int(genes['total_offset'] * 8) * 0.5**int(genes['bpm']*3),
                          initial_offset=0.5,#(1/8) * int(genes['initial_offset'] * 8) * 1**int(genes['bpm']*3),
-                         red=int(genes['red'] * 155 + 100),
-                         green=int(genes['green'] * 155 + 100),
+                         red=int(genes['bpm'] * 155 + 100),# int(genes['red'] * 155 + 100),
+                         green=int(genes['initial_offset'] * 155 + 100),#int(genes['green'] * 155 + 100),
                          blue=255,#int(genes['blue'] * 155 + 100),
                          instrument=int(genes['rootoctave']*n_available_samples[1]),
                          # this is all relevant for a synth
@@ -160,7 +160,8 @@ def make_phenotype(genes, nature, config_dict, n_available_samples):
                          bpm=int(config_dict['bpm_base']*2**int(genes['bpm']*3)),
                          total_offset=0,#(1/4)* int(genes['total_offset'] * 4) * 0.5**int(genes['bpm']*3),
                          initial_offset=0.5,#(1/8) * int(genes['initial_offset'] * 8) * 1**int(genes['bpm']*3),
-                         red=int(genes['red'] * 155 + 100), green=int(genes['green'] * 155 + 100),
+                         red=int(genes['red'] * 155 + 100),
+                         green=int(genes['green'] * 155 + 100),
                          blue=int(genes['blue'] * 155 + 100),
                          instrument=int(genes['instrument']*n_available_samples[3]),
                          # this is all relevant for a synth
@@ -309,10 +310,15 @@ def make_genepool(size=3, crispr=[dict()]):
 
 def load_genepool(filename):
     """Load a genepool from a given file"""
+    done = False
+    while not done:
+        try:
+            df = pd.read_csv(filename, index_col=0)
+            return df
+        except:
+            print("error loeading genepool")
 
-    df = pd.read_csv(filename, index_col=0)
-
-    return df
+    return None
 
 
 def save_genepool(df, filename='genepool.csv'):

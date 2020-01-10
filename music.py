@@ -144,7 +144,7 @@ end""")
 
 
 
-def play_sound(phenotype):
+def play_sound(phenotype, available_samples):
     """Play the sounds in sonic pi"""
 
     if 'bass' in phenotype['nature']:
@@ -159,7 +159,6 @@ def play_sound(phenotype):
         send_message(f"/trigger/{get_sample_name(KICK[phenotype['instrument']])}", phenotype['amp'], phenotype['pitch'])
     elif 'perc' in phenotype['nature']:
         # print(PERC[phenotype['instrument']])
-        print(phenotype)
         send_message(f"/trigger/{get_sample_name(PERC[phenotype['instrument']])}", phenotype['amp'], phenotype['mix_reverb'],
                      phenotype['mix_echo'], phenotype['pitch'])
     elif 'snare' in phenotype['nature']:

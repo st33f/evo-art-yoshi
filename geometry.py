@@ -82,6 +82,7 @@ def main():
             preset_path = read_preset_path()
             preset_config = load_config(preset_path)
             scaling_factor = read_scaling_factor()
+            available_samples = read_available_samples()
 
             # set csv of currently playing instrument
             playing = preset_path + 'current/playing.csv'
@@ -108,7 +109,7 @@ def main():
         # This is where the magic happens
         for phenotype in phenotypes:
             #phenotype = make_phenotype(genes)
-            new_sparks = make_polygon(phenotype, t0, delta_t, preset_config, scaling_factor)
+            new_sparks = make_polygon(phenotype, t0, delta_t, preset_config, scaling_factor, available_samples)
             sparks = sparks + new_sparks
 
         if sparks != []:
@@ -163,7 +164,7 @@ def rotatePoint(polarcorner, angle, CENTER=CENTER):
     return newPolarcorner
 
 
-def make_polygon(genes, t, delta_t, preset_config, scaling_factor):
+def make_polygon(genes, t, delta_t, preset_config, scaling_factor, available_samples):
 
     # Now this is where the magic happens...
     
@@ -196,7 +197,7 @@ def make_polygon(genes, t, delta_t, preset_config, scaling_factor):
             polarcorner[1] = round(polarcorner[1] % 360., 3)
             delta = abs(polarcorner[1] - prev_polarcorner[1])
             if delta > 180.:
-                play_sound(genes)
+                play_sound(genes, available_samples)
                 sparks.append({"position": genes['radius'],
                                "color": (genes['red'], genes['green'], genes['blue']),
                                "age": 0})

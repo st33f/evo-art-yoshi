@@ -1,4 +1,5 @@
 from presets import *
+#from music import reset_all_listeners
 from PyQt5.QtWidgets import *
 from fitness import scramble_all
 #from PyQt5.QtCore import Qt
@@ -20,8 +21,7 @@ class Gui(QDialog):
 
         self.mainLayout = QGridLayout()
 
-        self.create_preset_chooser()
-        self.mainLayout.addLayout(self.PresetChooser, 1, 0)
+        self.remake_preset_chooser()
 
         self.remake_dict_editor()
         self.remake_preset_generator()
@@ -60,6 +60,10 @@ class Gui(QDialog):
     def make_new_preset(self):
 
         name = self.new_preset_name_editor.text()
+        create_preset_from_puppetmaster(self.config_dict, name)
+        self.new_preset_name_editor.setText('')
+        self.new_preset_save_btn.setEnabled(False)
+        self.remake_preset_chooser()
 
 
     def check_new_config_name(self):
@@ -108,9 +112,14 @@ class Gui(QDialog):
         self.setLayout(self.mainLayout)
 
 
-    def create_preset_chooser(self, master_config_path=MASTER_CONFIG_PATH):
+    def remake_preset_chooser(self, master_config_path=MASTER_CONFIG_PATH):
         presets = glob.glob(PRESETS_PATH + '*')
         self.preset_names = [x.split(os.sep)[-1] for x in presets]
+
+        try:
+            self.PresetChooser.deleteLater()
+        except:
+            print()
 
         self.PresetChooser = QHBoxLayout()
         self.presetComboBox = QComboBox()
@@ -131,6 +140,12 @@ class Gui(QDialog):
         self.PresetChooser.addWidget(presetLabel)
         self.PresetChooser.addWidget(self.presetComboBox)
         self.PresetChooser.addWidget(self.selectBtn)
+
+        self.mainLayout.addLayout(self.PresetChooser, 1, 0)
+        self.setLayout(self.mainLayout)
+
+        
+    
 
 
     def update_master_config(self):
@@ -161,12 +176,23 @@ class Gui(QDialog):
     def check_dict(self):
 
         try:
+            n_parameters = len(self.config_dict["natures"]) + 1
             for key, value in self.config_dict.items():
-                self.config_dict[key] = eval(self.widgets[key]['lineedit'].text())
+                value = eval(self.widgets[key]['lineedit'].text())
+                print(value)
+                if type(value) == list and key not in ["natures", "synths", "manual_optimum"]:
+                    print(key)
+                    if len(value) != n_parameters:
+                        raise
+                self.config_dict[key] = value
             self.saveBtn.setEnabled(True)
             return True
         except:
             self.saveBtn.setEnabled(False)
+            try:
+                self.new_preset_save_btn.setEnabled(False)
+            except:
+                print()
             return False
 
 
@@ -174,6 +200,8 @@ class Gui(QDialog):
 
         for key, value in config_dict.items():
             config_dict[key] = eval(self.widgets[key]['lineedit'].text())
+            if key == "natures":
+                config_dict[key] = sorted(config_dict[key])
 
         done = False
         while not done:
@@ -183,6 +211,17 @@ class Gui(QDialog):
                 done = True
             except:
                 print(f"save of {config_path}config.json failed")
+
+        preset_path = self.master_config_dict["preset_path"]
+
+        for nature in config_dict["natures"]:
+            if not os.path.isfile(preset_path + f"current/{nature.lower()}.csv"):
+                create_initial_genes(preset_path + f"current/", config_dict, nature)
+
+        files = [file.replace('\\', '/') for file in glob.glob(preset_path + 'current/*.csv') if 'playing' not in file]
+        for file in files:
+            if file.split(os.sep)[-1].split('.')[0] not in config_dict["natures"]:
+                os.remove(file.replace('\\', '/'))
 
 
     def save_master_dict(self, config_dict, config_path):
@@ -195,6 +234,7 @@ class Gui(QDialog):
                 done = True
             except:
                 print("save master config failed")
+        self.update_master_config()
 
 
     """
@@ -253,10 +293,19 @@ def get_available_samples():
 
     save_config(MASTER_CONFIG_PATH, master_config_dict)
 
+    return master_config_dict
+
+
+def check_for_playing(preset_path):
+
+    if not os.path.isfile(preset_path + "playing.csv"):
+        select_genes(preset_path)
+
 
 def main():
 
-    get_available_samples()
+    master_config_dict = get_available_samples()
+    check_for_playing(master_config_dict["preset_path"])
     QApplication.setStyle("Fusion")
     app = QApplication(sys.argv)
     gui = Gui()
