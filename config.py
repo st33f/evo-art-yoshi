@@ -196,7 +196,6 @@ class Gui(QDialog):
             return False
 
 
-
     def save_config_dict(self, config_dict, config_path):
 
         for key, value in config_dict.items():
