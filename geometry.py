@@ -43,7 +43,8 @@ def main():
     # set csv of currently playing instrument
     playing = preset_path + 'current/playing.csv'
 
-    setup_listeners()
+    #setup_listeners()
+    reset_all_listeners()
 
     # get some time info
     start = time.time()
