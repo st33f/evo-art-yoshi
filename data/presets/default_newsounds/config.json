@@ -1,1 +1,0 @@
-{"pop_size": 20, "gen_length": 8, "bpm_base": 20, "refresh_rate": 8, "instr_count": [1, 0, 0, 1, 0, 1, 1], "speed": 1.0, "mut_rate": [0.2, 0.2, 0.2, 0.2, 0.2, 0.2, 0.2], "mut_eta": 0.1, "mut_indpb": 0.4, "dist_weight": 1.0, "symm_weight": 1.0, "age_weight": 1.0, "manual_optimum": []}

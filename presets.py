@@ -111,12 +111,28 @@ def create_random_indices(instr_counts):
 
     return result
 
-
-
 def select_genes(preset_path):
+    preset_config = load_config(preset_path)
+    n_samples = read_n_available_samples(MASTER_CONFIG_PATH)
+    phenotypes = []
+    natures = preset_config["natures"]
+    for i, nature in enumerate(natures):
+        data = load_genepool(preset_path + f'current/{nature.lower()}.csv')
+        for j in range(preset_config["instr_count"][i]):
+            gene = data.iloc[j,]
+            phenotype = make_phenotype(gene, i, preset_config, n_samples)
+            phenotypes.append(phenotype)
+
+    current_phenotypes = pd.DataFrame(phenotypes)
+
+    current_phenotypes.to_csv(f"{preset_path}current/playing.csv")
+
+
+def select_genes_old(preset_path):
     preset_config = load_config(preset_path)
 
     indices = [[x] for x in range(len(preset_config["natures"]))]
+    print(indices)
     n_samples = read_n_available_samples(MASTER_CONFIG_PATH)
 
     phenotypes = []

@@ -1,5 +1,6 @@
 import random
 import pandas as pd
+import time
 
 DATA_PATH = 'data/'
 
@@ -54,10 +55,13 @@ def make_phenotype(genes, nature, config_dict, n_available_samples):
     Output: indexed pandas table of phenes
     """
 
-    natures = ['bass', 'guitar', 'hat', 'kick', 'perc', 'snare', 'synth']
+    #natures = ['bass', 'guitar', 'hat', 'kick', 'perc', 'snare', 'synth']
+
+    natures = config_dict["natures"]
 
     # mapping for BASSES
-    if natures[nature] == "bass":
+
+    if natures[nature].lower() == "bass":
 
         phenotype = dict(nature=natures[nature],
                      rootnote=int(genes['rootnote'] * 12 + 24),
@@ -87,7 +91,7 @@ def make_phenotype(genes, nature, config_dict, n_available_samples):
                      )
 
     # mapping for GUITAR
-    elif natures[nature] == "guitar":
+    elif natures[nature].lower() == "guitar":
 
         phenotype = dict(nature=natures[nature],
                          rootnote=int(genes['rootnote'] * 12 + 24),
@@ -118,7 +122,7 @@ def make_phenotype(genes, nature, config_dict, n_available_samples):
                          )
 
     # mapping for HI-HATS
-    elif natures[nature] == "hat":
+    elif natures[nature].lower() == "hat":
 
         phenotype = dict(nature=natures[nature],
                          rootnote=int(genes['rootnote'] * 12 + 24),
@@ -149,7 +153,7 @@ def make_phenotype(genes, nature, config_dict, n_available_samples):
                          )
 
     # mapping for KICK
-    elif natures[nature] == "kick":
+    elif natures[nature].lower() == "kick":
 
         phenotype = dict(nature=natures[nature],
                          rootnote=int(genes['rootnote'] * 12 + 24),
@@ -180,7 +184,7 @@ def make_phenotype(genes, nature, config_dict, n_available_samples):
                          )
 
     # mapping for PERCS
-    elif natures[nature] == "perc":
+    elif natures[nature].lower() == "perc":
 
         phenotype = dict(nature=natures[nature],
                          rootnote=int(genes['rootnote'] * 12 + 24),
@@ -211,7 +215,7 @@ def make_phenotype(genes, nature, config_dict, n_available_samples):
                          )
 
     # mapping for SNARE
-    elif natures[nature] == "snare":
+    elif natures[nature].lower() == "snare":
 
         phenotype = dict(nature=natures[nature],
                          rootnote=int(genes['rootnote'] * 12 + 24),
@@ -241,7 +245,7 @@ def make_phenotype(genes, nature, config_dict, n_available_samples):
 
 
     # mapping for SYNTH
-    elif natures[nature] == "synth":
+    elif natures[nature].lower() == "synth":
 
         phenotype = dict(nature=natures[nature],
                          rootnote=int(genes['rootnote'] * 12 + 24),
@@ -317,6 +321,7 @@ def load_genepool(filename):
             return df
         except:
             print("error loeading genepool")
+            time.sleep(0.01)
 
     return None
 

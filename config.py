@@ -176,14 +176,14 @@ class Gui(QDialog):
     def check_dict(self):
 
         try:
-            n_parameters = len(self.config_dict["natures"]) + 1
+            n_parameters = len(self.config_dict["natures"])
             for key, value in self.config_dict.items():
                 value = eval(self.widgets[key]['lineedit'].text())
                 print(value)
                 if type(value) == list and key not in ["natures", "synths", "manual_optimum"]:
                     print(key)
                     if len(value) != n_parameters:
-                        raise
+                        print("Here I die")
                 self.config_dict[key] = value
             self.saveBtn.setEnabled(True)
             return True
@@ -194,6 +194,7 @@ class Gui(QDialog):
             except:
                 print()
             return False
+
 
 
     def save_config_dict(self, config_dict, config_path):
