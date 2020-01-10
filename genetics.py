@@ -61,7 +61,7 @@ def make_phenotype(genes, nature, config_dict, n_available_samples):
 
         phenotype = dict(nature=natures[nature],
                      rootnote=int(genes['rootnote'] * 12 + 24),
-                     rootoctave=int(genes['rootoctave'] * 3 + 3),
+                     rootoctave=3,#int(genes['rootoctave'] * 3 + 3),
                      order=int(genes['order'] * 10 + 3),
                      number=int(genes['number'] * 2 + 1),
                      bpm=int(config_dict['bpm_base']*2**int(genes['bpm']*3)),
