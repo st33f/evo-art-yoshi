@@ -280,13 +280,22 @@ def get_available_samples():
     master_config_dict = load_config(MASTER_CONFIG_PATH)
 
     available_samples = {}
-    natures = [x for x in glob.glob('samples/*')]
+    #natures = [x for x in glob.glob(f"samples{os.sep}*")]
+    natures = [x for x in glob.glob(os.path.join('samples', '*'))]
     natures.sort()
+
+    # add synths
+
     for nature in natures:
-        samples = [x for x in glob.glob(nature+'/*')]
-        available_samples[nature.split('/')[-1]] = samples
-        print(nature, samples)
-    print(available_samples)
+        #samples = [x for x in glob.glob(f"{nature}{os.sep}*")]
+        folder = os.path.join(nature, '*')
+        samples = []
+        for x in glob.glob(folder):
+            filename = str(os.path.normpath(x))
+            samples.append(filename)
+
+        available_samples[nature.split(os.sep)[-1]] = samples
+
     
     master_config_dict["available_samples"] = available_samples
     master_config_dict["n_available_samples"] = [len(x) for x in available_samples.values()]
@@ -295,6 +304,8 @@ def get_available_samples():
 
     return master_config_dict
 
+
+get_available_samples()
 
 def check_for_playing(preset_path):
 

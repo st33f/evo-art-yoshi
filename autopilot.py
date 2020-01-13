@@ -112,8 +112,8 @@ def main():
     preset_path = read_preset_path()
     preset_config = load_config(preset_path)
 
-    # structure = [preset_config['instr_count']]
-    structure = [[1,0,0,0,0,0,0]]
+    structure = [preset_config['instr_count']]
+    #structure = [[1,0,0,0,0,0,0]]
 
     done = False
     while not done:

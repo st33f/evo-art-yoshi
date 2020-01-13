@@ -94,7 +94,7 @@ def initialize_current(preset_path):
     for file in glob.glob(f'{preset_path}initial/*'):
         data = load_genepool(file)
         name = file.split(os.sep)[-1]
-        save_genepool(data, f'{preset_path}current/{name}')
+        save_genepool(data, f'{preset_path}current{os.sep}{name}')
 
 
 def create_random_indices(instr_counts):
@@ -117,8 +117,8 @@ def select_genes(preset_path):
     phenotypes = []
     natures = preset_config["natures"]
     for i, nature in enumerate(natures):
-        data = load_genepool(preset_path + f'current/{nature.lower()}.csv')
-        for j in range(preset_config["instr_count"][i]):
+        data = load_genepool(preset_path + f'current{os.sep}{nature.lower()}.csv')
+        for j in range(int(preset_config["instr_count"][i])):
             gene = data.iloc[j,]
             phenotype = make_phenotype(gene, i, preset_config, n_samples)
             phenotypes.append(phenotype)
@@ -184,7 +184,7 @@ def create_preset_from_puppetmaster(config_dict, name):
 
     initialize_current(new_preset_path)
     # the following creates playing.csv
-    select_genes(new_preset_path, natures)
+    select_genes(new_preset_path)
 
 
 
