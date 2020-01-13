@@ -127,7 +127,6 @@ def main():
         structure = create_new_structure(structure[-1], preset_config["bar_length"], preset_config["max_instr_count"])
 
 
-
         #structure = [[1,1,1,1,1,1,1]]
 
         print(structure)
