@@ -139,7 +139,7 @@ def draw_sparks(screen, sparks, scaling_factor):
         alpha = int(255 * (1 - ((age-1) / max_age)))
         color = (max([0, spark["color"][0] - 5 * age]), max([0, spark["color"][1] - 5 * age]), max([0, spark["color"][2] - 5 * age]))
         m = [int(CENTER[0]), int(CENTER[1]) - int(spark["position"])]
-        radius = int(((25 - int(age))*2) * scaling_factor)
+        radius = int((25 - int(age)) * scaling_factor)
         pygame.draw.circle(screen, color, m, radius)
         if age > max_age:
             sparks.remove(spark)

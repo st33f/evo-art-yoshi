@@ -86,7 +86,7 @@ def setup_basses(BASS):
     for bass in BASS:
         sample_name = get_sample_name(bass)
         # print(sample_name)
-        print('Setting up listener for: ', bass)
+        #print('Setting up listener for: ', bass)
         run(f"""in_thread do
       live_loop :{sample_name} do
       use_real_time
@@ -99,7 +99,7 @@ def setup_basses(BASS):
 def setup_guitars(GUITAR):
     for guit in GUITAR:
         sample_name = get_sample_name(guit)
-        # print('Setting up listener for: ', perc)
+        print('Setting up listener for: ', guit)
         # print(sample_name)
         run(f"""in_thread do
       live_loop :{sample_name} do
@@ -114,7 +114,7 @@ def setup_guitars(GUITAR):
 def setup_hats(HAT):
     for hat in HAT:
         sample_name = get_sample_name(hat)
-        print('Setting up listener for: ', hat)
+        #print('Setting up listener for: ', hat)
         # print(sample_name)
         run(f"""in_thread do
       live_loop :{sample_name} do
@@ -160,7 +160,7 @@ def setup_percs(PERC):
 def setup_snares(SNARE):
     for snare in SNARE:
         sample_name = get_sample_name(snare)
-        print('Setting up listener for: ', snare)
+        #print('Setting up listener for: ', snare)
         # print(sample_name)
         run(f"""in_thread do
       live_loop :{sample_name} do
@@ -208,7 +208,7 @@ end""")
 
     for guit in GUITAR:
         sample_name = get_sample_name(guit)
-        # print('Setting up listener for: ', perc)
+        print('Setting up listener for: ', guit)
         # print(sample_name)
         run(f"""in_thread do
   live_loop :{sample_name} do
@@ -330,7 +330,7 @@ def reset_all_listeners():
         if "BASS" in nature[0]:
             basses = [x for x in glob.glob(f"samples{os.sep}BASS{os.sep}*")]
             setup_basses(basses)
-        elif "GUITAR" in nature[0]:
+        elif "GUIT" in nature[0]:
             guit = [x for x in glob.glob(f"samples{os.sep}GUITAR{os.sep}*")]
             setup_guitars(guit)
         elif "HAT" in nature[0]:
