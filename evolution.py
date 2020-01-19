@@ -1,26 +1,8 @@
 """
-New version of evolution.py, which now evolves separate populations rather than one main.
+todo
+- pd.concat all population dfs and give them a gen number
+- pd.concat playing.csv
 
-Been thinking a bit about what selection etc actually means. In our implementation, there basically is no selection at
-all, since we are using a generational model with a comma strategy. There is an equal number of offspring produced
-to the amount of parents, which are all replaced (some offspring are left unmutated, but this is still technically
-generational). Thus, no parent selection or survivor selection is enforced in the populations. Selection does come
-into play for currently playing genes/phenes, but this is not technically evolutionary selection. The structure
-could be changed to have survivor selection, for instance by producing a multitude of offspring and cutting a few
-based on selection.
-
-There's a bunch of redundancy in cloning offspring etc and the program works exactly the same without doing this (just
-mutating the pop directly). I left it in because maybe in the future, it could be more interesting to generate more
-offspring.
-
-todo's
-- could look a bit more at evolution strategy. Maybe adjust the parameters of .mutPolynomialBounded so a mutrate of
-  1 guarantees mutation? This would be a bit more logical and enable more control.
-- Update the evolution strategy to actually use survivor selection! The populations now are completely replaced by
-  a similar amount of offspring. Over-producing offspring could generate more 'favourable' combinations prior to
-  currently playing-selection.
-
-- COULD experiment with 'demes', DEAP's preferred way of implementing multiple populations... but not required.
 """
 
 from deap import base
@@ -33,7 +15,6 @@ import fitness as fit
 import numpy as np
 import pandas as pd
 import time
-import json
 import glob as glob
 from itertools import repeat
 
@@ -55,29 +36,30 @@ def shuffle(pop):
     return random.sample(pop, len(pop))
 
 
-def evaluation(playing, age_col, population, optimum, toolbox, dist_weight=0.0, symm_weight=1.0, age_weight=0.0, manual_optimum=[]):
+def evaluate(playing, age_col, population, optimum, toolbox, dist_weight=0.0,
+             symm_weight=1.0, age_weight=0.0, manual_optimum=False):
 
     # subset of cols to evaluate
     # calc distance based on subset
     # then score every individual in pop
     subset = ['order']
 
-    if len(manual_optimum) == 0:
+    if not manual_optimum:
         opt = optimum.loc[:, subset].values
     else:
         opt = manual_optimum
 
     pop = population.loc[:, subset].values
 
-    fitnesses_dist = map(toolbox.evaluate_dist, pop, repeat(opt))
-    fitnesses_symm = map(toolbox.evaluate_symm, pop, repeat(playing))
+    fitnesses_dist = list(map(toolbox.evaluate_dist, pop, repeat(opt)))
+    fitnesses_symm = list(map(toolbox.evaluate_symm, pop, repeat(playing)))
     fitnesses_age  = list(age_col.values) + [0] * (len(pop) - len(age_col.values))
 
-    fitnesses_dist = [i * dist_weight for i in fitnesses_dist]
-    fitnesses_symm = [i * symm_weight for i in fitnesses_symm]
-    fitnesses_age  = [i * age_weight  for i in fitnesses_age ]
+    fitnesses_dist_w = [i * dist_weight for i in fitnesses_dist]
+    fitnesses_symm_w = [i * symm_weight for i in fitnesses_symm]
+    fitnesses_age_w  = [i * age_weight  for i in fitnesses_age ]
 
-    fits = [sum(x) for x in zip(fitnesses_dist, fitnesses_symm, fitnesses_age)]
+    fits = [sum(x) for x in zip(fitnesses_dist_w, fitnesses_symm_w, fitnesses_age_w)]
 
     return fits
 
@@ -125,23 +107,46 @@ def insert(selected, population):
     return new_pop
 
 
+def create_exp_path():
+    # print(glob.glob("experiments/*"))
+    # print(glob.glob("experiments/*") is [])
+    # # print(['experiments/'])
+    # # print(glob.glob("experiments/*") is ['experiments/'])
+
+    if not glob.glob("experiments/*"):
+        exp_number = 0
+    else:
+        exp_number = max([int(f.split("\\")[-1].split("_")[-1]) for f in glob.glob("experiments/*")]) + 1
+
+    root = "experiments"
+    exp_path = os.path.join(root, "experiment_{}".format(exp_number)) + "\\"
+    return exp_path
+
+
+def save_data(pop_phenes, pop_fits, gen_path, filename):
+
+    pop_fits = [round(i,2) for (i,) in pop_fits]
+
+    pop_phenes['fitness'] = pop_fits
+
+    name = filename.split('/')[-1]
+    pop_phenes.to_csv(os.path.join(gen_path, name))
+
 
 def main():
 
     g = 0  # generation counter
 
     preset_path = read_preset_path()
+    exp_path = create_exp_path()
     old_preset_path = preset_path
     n_available_samples = read_n_available_samples()
     preset_config = load_config(preset_path)
-
 
     # scramble all genes randomly
     fit.scramble_all(preset_path)
 
     files = [file.replace('\\', '/') for file in glob.glob(preset_path + 'current/*.csv') if 'playing' not in file]
-
-    #natures = ['bass', 'guitar', 'hat', 'kick', 'perc', 'snare', 'synth']
 
     ages = pd.DataFrame(np.zeros([preset_config['pop_size'], len(preset_config["natures"])], dtype='int'),
                         columns=preset_config["natures"])
@@ -173,11 +178,14 @@ def main():
         mutpb = preset_config['mut_rate']
 
         next_play = pd.DataFrame(columns=phen_cols)
+        play_fits = []
 
         print("-- Generation %i --" % g)
 
-        # Optimum is the mean of the phenotype
+        # Optimum
         optimum = compute_optimum(load_genepool(playing_path), phen_cols)
+        gen_path = os.path.join(exp_path, "gen_{}".format(g))
+        create_folder(gen_path)
 
         for i, pop in enumerate(pops):
 
@@ -208,32 +216,38 @@ def main():
 
             pop_phenotypes_df = pd.DataFrame(pop_phenotypes, columns=phen_cols)
 
-            fitnesses = evaluation(load_genepool(playing_path), ages.iloc[:,i],
-                                   pop_phenotypes_df, optimum, toolbox,
-                                   dist_weight=preset_config['dist_weight'], symm_weight=preset_config['symm_weight'],
-                                   age_weight=preset_config['age_weight'], manual_optimum=preset_config['manual_optimum'])
+            fitnesses = evaluate(load_genepool(playing_path), ages.iloc[:,i],
+                                           pop_phenotypes_df, optimum, toolbox,
+                                           dist_weight=preset_config['dist_weight'], symm_weight=preset_config['symm_weight'],
+                                           age_weight=preset_config['age_weight'], manual_optimum=preset_config['manual_optimum'])
 
             for j, ind in enumerate(new_pop):
                 ind.fitness.values = (fitnesses[j],)
 
-            new_pop = toolbox.survivor_select(shuffle(new_pop), n) # implementation without AGE
+            new_pop = toolbox.survivor_select(shuffle(new_pop), n)  # implementation without AGE
+
+            # just an ugly for loop that gets the job done
+            surv_fits = []
+            for ind in new_pop:
+                surv_fits.append(ind.fitness.values)
 
             # save new populations to respective csv file
             pop_genes = pd.DataFrame(new_pop, columns=gen_cols)
-            pop_phenes = gen2phen(pop_genes, phen_cols, i, preset_config, n_available_samples)  # used for age calculation
+            pop_phenes = gen2phen(pop_genes, phen_cols, i, preset_config, n_available_samples)
 
             save_complete = False
             while not save_complete:
                 try:
                     pop_genes.to_csv(files[i])
+                    save_data(pop_phenes, surv_fits, gen_path, files[i])
                     save_complete = True
                 except:
                     print(f"saving {files[i]} failed.")
 
-            # selection for next_play using NSGA2
+            # selection for next_play
             best_genes = toolbox.playing_select(shuffle(new_pop), int(preset_config['instr_count'][i]))
+            play_fits = play_fits + [ind.fitness.values for ind in best_genes]
             best_genes = pd.DataFrame(best_genes, columns=gen_cols)
-            # print(best_genes)
 
             # convert next play to phenotype and save as play.csv
             best_phenotypes = gen2phen(best_genes, phen_cols, i, preset_config, n_available_samples)
@@ -249,6 +263,7 @@ def main():
         while not save_complete:
             try:
                 next_play.to_csv(playing_path)
+                save_data(next_play, play_fits, gen_path, playing_path)
                 save_complete = True
             except:
                 print(f"saving {preset_path}current/playing.csv failed.")
