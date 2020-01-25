@@ -11,12 +11,11 @@ from presets import *
 base_dir = os.getcwd() + '/'
 
 # instruments
-#synths = [random.choice(['mod_beep', 'mod_pulse', 'mod_sine', 'growl']) for x in range(20)]
-SYNTH = ['mod_sine', 'fm', 'sine', 'sine']
-#synths = ['sine', 'sine', 'sine', 'sine', 'sine', 'sine', 'sine', 'sine', 'sine', 'sine', 'sine', 'sine', 'sine', 'sine', 'sine', 'sine', 'sine', 'sine', 'sine', 'sine', 'sine', 'sine', 'sine', 'sine']
-#synths = ['blade', 'blade', 'blade', 'blade']
-#synths = ['piano', 'piano', 'piano', 'piano']
-#synths = ['pretty_bell', 'sine', 'fm', 'prophet']
+# get configs
+preset_path = read_preset_path()
+preset_config = load_config(preset_path)
+# WE NEED TO MAKE THE FOLLOWING DYNAMIC
+SYNTH = preset_config['synths']
 
 BASS = [x for x in glob.glob('samples/BASS/*')]
 GUITAR = [x for x in glob.glob('samples/GUITAR/*')]
@@ -41,7 +40,8 @@ def get_all_instruments():
     available_samples = read_available_samples()
 
     for k, v in available_samples.items():
-        if k in active_natures:
+        instr = k.split(os.sep)[-1]
+        if instr in active_natures:
             active_instruments.append(v)
 
     if "SYNTH" in active_natures:
@@ -52,7 +52,6 @@ def get_all_instruments():
 def stop_all_listeners():
     # Stop running processes in Sonic Pi
     stop()
-
 
 
 
@@ -87,7 +86,7 @@ def setup_basses(BASS):
     for bass in BASS:
         sample_name = get_sample_name(bass)
         # print(sample_name)
-        print('Setting up listener for: ', bass)
+        #print('Setting up listener for: ', bass)
         run(f"""in_thread do
       live_loop :{sample_name} do
       use_real_time
@@ -100,7 +99,7 @@ def setup_basses(BASS):
 def setup_guitars(GUITAR):
     for guit in GUITAR:
         sample_name = get_sample_name(guit)
-        # print('Setting up listener for: ', perc)
+        print('Setting up listener for: ', guit)
         # print(sample_name)
         run(f"""in_thread do
       live_loop :{sample_name} do
@@ -115,7 +114,7 @@ def setup_guitars(GUITAR):
 def setup_hats(HAT):
     for hat in HAT:
         sample_name = get_sample_name(hat)
-        print('Setting up listener for: ', hat)
+        #print('Setting up listener for: ', hat)
         # print(sample_name)
         run(f"""in_thread do
       live_loop :{sample_name} do
@@ -161,7 +160,7 @@ def setup_percs(PERC):
 def setup_snares(SNARE):
     for snare in SNARE:
         sample_name = get_sample_name(snare)
-        print('Setting up listener for: ', snare)
+        #print('Setting up listener for: ', snare)
         # print(sample_name)
         run(f"""in_thread do
       live_loop :{sample_name} do
@@ -209,7 +208,7 @@ end""")
 
     for guit in GUITAR:
         sample_name = get_sample_name(guit)
-        # print('Setting up listener for: ', perc)
+        print('Setting up listener for: ', guit)
         # print(sample_name)
         run(f"""in_thread do
   live_loop :{sample_name} do
@@ -283,25 +282,25 @@ end""")
 
 def play_sound(phenotype, available_samples):
     """Play the sounds in sonic pi"""
-    if 'bass' in phenotype['nature']:
+    if 'bass' in phenotype['nature'].lower():
         # print('Bass playing:  ', BASS[phenotype['instrument']])
         send_message(f"/trigger/{get_sample_name(BASS[phenotype['instrument']])}", phenotype['amp'], phenotype['pitch'])
-    elif 'guitar' in phenotype['nature']:
+    elif 'guitar' in phenotype['nature'].lower():
         send_message(f"/trigger/{get_sample_name(GUITAR[phenotype['instrument']])}", phenotype['amp'], phenotype['mix_reverb'],
                      phenotype['mix_echo'], phenotype['pitch'])
-    elif 'hat' in phenotype['nature']:
+    elif 'hat' in phenotype['nature'].lower():
         send_message(f"/trigger/{get_sample_name(HAT[phenotype['instrument']])}", phenotype['amp'], phenotype['mix_reverb'])
-    elif 'kick' in phenotype['nature']:
+    elif 'kick' in phenotype['nature'].lower():
         send_message(f"/trigger/{get_sample_name(KICK[phenotype['instrument']])}", phenotype['amp'], phenotype['pitch'])
-    elif 'perc' in phenotype['nature']:
+    elif 'perc' in phenotype['nature'].lower():
         # print(PERC[phenotype['instrument']])
         send_message(f"/trigger/{get_sample_name(PERC[phenotype['instrument']])}", phenotype['amp'], phenotype['mix_reverb'],
                      phenotype['mix_echo'], phenotype['pitch'])
-    elif 'snare' in phenotype['nature']:
+    elif 'snare' in phenotype['nature'].lower():
         # print(SNARE[phenotype['instrument']])
         send_message(f"/trigger/{get_sample_name(SNARE[phenotype['instrument']])}", phenotype['amp'], phenotype['mix_reverb'],
                      phenotype['mix_echo'], phenotype['pitch'])
-    elif 'synth' in phenotype['nature']:
+    elif 'synth' in phenotype['nature'].lower():
         # print('Synth: ', synths[phenotype['instrument']])
         send_message(f"/trigger/{SYNTH[phenotype['instrument']]}_{phenotype['instrument']}", phenotype['note'], phenotype['cutoff'], phenotype['attack'],
                      phenotype['release'], phenotype['mix_reverb'])
@@ -312,7 +311,7 @@ def play_sound(phenotype, available_samples):
 def reset_all_listeners():
 
     # stop active listeners
-    stop_all_listeners()
+    #stop_all_listeners()
 
     # setting up metronome
     run("""use_debug false
@@ -329,29 +328,29 @@ def reset_all_listeners():
 
     for nature in all_instr:
         if "BASS" in nature[0]:
-            basses = [x for x in glob.glob('samples/BASS/*')]
+            basses = [x for x in glob.glob(f"samples{os.sep}BASS{os.sep}*")]
             setup_basses(basses)
-        elif "GUITAR" in nature[0]:
-            guit = [x for x in glob.glob('samples/GUITAR/*')]
+        elif "GUIT" in nature[0]:
+            guit = [x for x in glob.glob(f"samples{os.sep}GUITAR{os.sep}*")]
             setup_guitars(guit)
         elif "HAT" in nature[0]:
-            hat = [x for x in glob.glob('samples/HAT/*')]
+            hat = [x for x in glob.glob(f"samples{os.sep}HAT{os.sep}*")]
             setup_hats(hat)
         elif "KICK" in nature[0]:
-            kick = [x for x in glob.glob('samples/KICK/*')]
+            kick = [x for x in glob.glob(f"samples{os.sep}KICK{os.sep}*")]
             setup_kicks(kick)
         elif "PERC" in nature[0]:
-            perc = [x for x in glob.glob('samples/PERC/*')]
+            perc = [x for x in glob.glob(f"samples{os.sep}PERC{os.sep}*")]
             setup_percs(perc)
         elif "SNARE" in nature[0]:
-            snare = [x for x in glob.glob('samples/SNARE/*')]
+            snare = [x for x in glob.glob(f"samples{os.sep}SNARE{os.sep}*")]
             setup_snares(snare)
 
     if "SYNTH" in active_natures:
         setup_synths(active_synths)
 
 
-
+reset_all_listeners()
 
 '''
     run("""use_debug false

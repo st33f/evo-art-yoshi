@@ -58,6 +58,7 @@ def make_phenotype(genes, nature, config_dict, n_available_samples):
     #natures = ['bass', 'guitar', 'hat', 'kick', 'perc', 'snare', 'synth']
 
     natures = config_dict["natures"]
+    synths = config_dict["synths"]
 
     # mapping for BASSES
 
@@ -254,12 +255,12 @@ def make_phenotype(genes, nature, config_dict, n_available_samples):
                          #number=int(genes['number'] * 3 + 1),
                          number=int(genes['number'] * 4 + 2),
                          bpm=int(config_dict['bpm_base']*2**int(genes['bpm']*3)),
-                         total_offset=0,#(1/8)* int(genes['total_offset'] * 8) * 0.5**int(genes['bpm']*3),
-                         initial_offset=0.33,#(1/4) * int(genes['initial_offset'] * 4) * 1**int(genes['bpm']*3),
+                         total_offset=0,#(1/4) * int(genes['total_offset'] * 4) * 0.5**int(genes['bpm']*3),
+                         initial_offset=random.choice([1.25, 1.333, 1.5]),#random.choice([0.125, 0.25, 0.33, 0.5, 0.66, 0.75]),#(1/24) * int(genes['initial_offset'] * 24) * 1**int(genes['bpm']*3),
                          red=255,#int(genes['red'] * 155 + 100),
                          green=int(genes['green'] * 155 + 100),
                          blue=int(genes['blue'] * 155 + 100),
-                         instrument=int(genes['instrument']*4),
+                         instrument=int(genes['instrument']*len(synths)),
                          # this is all relevant for a synth
                          amp=round(genes['amp'] * 0.5 + 0.5, 2),
                          cutoff=int(genes['cutoff'] * 30 + 70),

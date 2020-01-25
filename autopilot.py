@@ -91,7 +91,10 @@ def create_new_structure(last_section, bar_length, max_instr_count):
             for k, instrument in enumerate(last_section):
                 if flip[k]:
                     if instrument == max_instr_count[k]:
-                        instrument += 0
+                        if random.random() < 0.9:
+                            instrument += 0
+                        else:
+                            instrument -= 1
                     elif instrument == 0:
                         instrument += 1
                     else:
@@ -112,8 +115,8 @@ def main():
     preset_path = read_preset_path()
     preset_config = load_config(preset_path)
 
-    # structure = [preset_config['instr_count']]
-    structure = [[1,0,0,0,0,0,0]]
+    structure = [preset_config['instr_count']]
+    #structure = [[0,0,0,0,0,0,0]]
 
     done = False
     while not done:
@@ -127,8 +130,7 @@ def main():
         structure = create_new_structure(structure[-1], preset_config["bar_length"], preset_config["max_instr_count"])
 
 
-
-        #structure = [[1,1,1,1,1,1,1]]
+        #structure = [[0,0,0,0,0,0,4]]
 
         print(structure)
 
