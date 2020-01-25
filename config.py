@@ -219,9 +219,11 @@ class Gui(QDialog):
                 create_initial_genes(preset_path + f"current/", config_dict, nature)
 
         files = [file.replace('\\', '/') for file in glob.glob(preset_path + 'current/*.csv') if 'playing' not in file]
+        print(config_dict["natures"])
         for file in files:
-            if file.split(os.sep)[-1].split('.')[0] not in config_dict["natures"]:
-                os.remove(file.replace('\\', '/'))
+            if file.split(os.sep)[-1].split('.')[0].upper() not in config_dict["natures"]:
+                print(file.split('/')[-1].split('.')[0].upper())
+                #os.remove(file.replace('\\', '/'))
 
 
     def save_master_dict(self, config_dict, config_path):
