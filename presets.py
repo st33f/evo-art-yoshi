@@ -52,7 +52,14 @@ def load_config(config_path=MASTER_CONFIG_PATH):
     while not done:
         try:
             with open(config_path + 'config.json') as f:
-                config = json.load(f)
+
+                # config = json.load(f)
+                config = {**json.load(f),
+                          'recovery': False,
+                          'debug_mode': True,
+                          'collect_data': False
+                }  # Comment out this line once the button is implemented in the GUI.
+
             done = True
         except:
             print(f"loading from {config_path} failed.")

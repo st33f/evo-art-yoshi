@@ -144,9 +144,6 @@ class Gui(QDialog):
         self.mainLayout.addLayout(self.PresetChooser, 1, 0)
         self.setLayout(self.mainLayout)
 
-        
-    
-
 
     def update_master_config(self):
 
