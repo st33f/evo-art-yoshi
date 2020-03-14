@@ -11,10 +11,15 @@ preset_path = read_preset_path()
 preset_config = load_config(preset_path)
 
 
+def attach(genes, fits):
+
+    for pop_genes, pop_fits in zip(genes, fits):
+        for ind in pop_genes:
+            ind.fitness.values = zip(pop_fits)
+
+    return genes
+
 def distance(a, b, method="euclidian"):
-    """distance fitness function
-    Inputs: two matching numpy arrays
-    Output: a fitness value"""
 
     if len(b) > 1:
         dif = 100
@@ -36,34 +41,36 @@ def distance(a, b, method="euclidian"):
 
     return fitness
 
-def compute_optimum(playing, phen_cols, method="mean"):
-    """
-    Input: a dataframe of playing.csv containing phenes(vars) as rows(cols)
-    Output: an optimum of the same dimensionality
 
-    This function should be placed in a loop later to reinitialize the optimum.
-    """
+# def compute_optimum(playing, phen_cols, method="mean"): # todo: deprecated
+#     """
+#     Input: a dataframe of playing.csv containing phenes(vars) as rows(cols)
+#     Output: an optimum of the same dimensionality
+#
+#     This function should be placed in a loop later to reinitialize the optimum.
+#     """
+#
+#     natures = playing.loc[:, 'nature']  # save the instrument types for the instr_optima method
+#
+#     playing.loc[:, ['nature', 'pitch']] = 0
+#
+#     # convert pd to np
+#     if isinstance(playing, pd.DataFrame):
+#         playing = playing.values
+#
+#     # compute a mean value for these that functions as an optimum
+#     if method == "mean":
+#         current_optimum = np.mean(playing, axis=0)
+#
+#     elif method == "bounding_box":
+#         raise NotImplementedError()
+#
+#     elif method == "instr_optima":
+#         raise NotImplementedError()
+#
+#     df = pd.DataFrame([current_optimum.tolist()], columns=phen_cols)
+#     return df
 
-    natures = playing.loc[:, 'nature']  # save the instrument types for the instr_optima method
-
-    playing.loc[:, ['nature', 'pitch']] = 0
-
-    # convert pd to np
-    if isinstance(playing, pd.DataFrame):
-        playing = playing.values
-
-    # compute a mean value for these that functions as an optimum
-    if method == "mean":
-        current_optimum = np.mean(playing, axis=0)
-
-    elif method == "bounding_box":
-        raise NotImplementedError()
-
-    elif method == "instr_optima":
-        raise NotImplementedError()
-
-    df = pd.DataFrame([current_optimum.tolist()], columns=phen_cols)
-    return df
 
 '''
 def update_age(age, next_play, verbose=False):

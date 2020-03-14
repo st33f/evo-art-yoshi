@@ -157,9 +157,6 @@ def pol2cart(rho, phi):
 
 
 def rotatePoint(polarcorner, angle, CENTER=CENTER):
-
-    # the name explains this pretty well i think
-
     newPolarcorner = [polarcorner[0], polarcorner[1] + angle]
 
     return newPolarcorner

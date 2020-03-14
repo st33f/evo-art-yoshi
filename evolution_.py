@@ -1,92 +1,46 @@
 """
-todo
-- use a pd dataframe to index and store populations.
-- make sure indices are preserved during selection
-- maintain a separate DF of fitnesses (and thus age as well) with the same MultiIndex
-- passing to deap is done by passing df.values() and reindexing after selection/mutation (?)
-	> is this possible?
+- start/stop functionality
+- load functionality: user can load population, fitness and playing from csv and initialize from there instead
+- variational optima functionality: enable different optimum for each nature.
+- small optimization: concat pops and fits earlier?
+- still not sure about script ordering.
+- look at genetics script, can clean out a lot of those functions and possibly rename to representation.py
+- could try to run SonicPi thru a docker container...
 
-- unique numbering for individuals could be implemented if needed.
-- could try nsga2.
+experiments
+- adjust pop size and mut rates. Population shouldn't be too large, as the search space will be covered
+  too densely. Mut rate (and step size) should be high to allow for large variation in solutions (we DON'T want
+  fast convergence, the journey is what counts! Sparsely populate the search space and allow solutions to search
+  inefficiently. Try to get the system to solve things creatively (high diversity of approach) instead of efficiently.)
+- if there are other interesting fitness metrics, now would be a good time to try them. Can still take a look at
+  related work for inspiration.
+
 """
 
-from deap import base
-from deap import creator
-from deap import tools
-from genetics import load_genepool, random_genome
-from presets import *  #load_config
-import fitness as fit
-import numpy as np
-import pandas as pd
+
 import time
 import glob as glob
 import random
-from itertools import repeat
+import numpy as np
+import pandas as pd
+from deap import base, creator, tools
+from genetics import load_genepool, random_gene # probably unused
+from presets import *  #load_config
+import fitness as fit
+from utils_rename import c
 
-
-def initIndividual(icls, content):
+def initIndividual(icls, content): # todo: can be made redundant (lambda)
     return icls(content)
 
 
-def initPopulation(pcls, ind_init, filename):
-    contents = []
-    df = load_genepool(filename)
-    for genome in df.values:
-        contents.append(list(genome))
-    return pcls(ind_init(c) for c in contents)
+def initPopulation(pcls, ind_init, inds): # todo: can be made redundant (lambda)
+    return [pcls(ind_init(ind)) for ind in inds]
 
 
-def random_pops(natures, pop_size, gen_cols, only_ages=False, **kwargs):
+def create_toolbox(params):
 
-    index = pd.MultiIndex.from_product([natures,
-                                        range(pop_size)], names=['pop', 'ind'])
-
-    pops = pd.DataFrame([random_genome() for _ in range(pop_size) for _ in natures],
-                        index=index, columns=gen_cols)
-
-    age = pd.DataFrame([0] * len(natures) * pop_size, index=index, columns=['age'])
-
-    print(pops)
-
-    return age if only_ages else index, pops, age
-
-
-def shuffle(pop):
-    """shuffles a population to prevent selWorst from prioritizing higher-up rows in a df"""
-    return random.sample(pop, len(pop))
-
-
-def evaluate(playing, age_col, population, optimum, toolbox, dist_weight=0.0,
-             symm_weight=1.0, age_weight=0.0, manual_optimum=False):
-
-    # subset of cols to evaluate
-    # calc distance based on subset
-    # then score every individual in pop
-    subset = ['order']
-
-    if not manual_optimum:
-        opt = optimum.loc[:, subset].values
-    else:
-        opt = manual_optimum
-
-    pop = population.loc[:, subset].values
-
-    fitnesses_dist = list(map(toolbox.evaluate_dist, pop, repeat(opt)))
-    fitnesses_symm = list(map(toolbox.evaluate_symm, pop, repeat(playing)))
-    fitnesses_age  = list(age_col.values) + [0] * (len(pop) - len(age_col.values))
-
-    fitnesses_dist_w = [i * dist_weight for i in fitnesses_dist]
-    fitnesses_symm_w = [i * symm_weight for i in fitnesses_symm]
-    fitnesses_age_w  = [i * age_weight  for i in fitnesses_age ]
-
-    fits = [sum(x) for x in zip(fitnesses_dist_w, fitnesses_symm_w, fitnesses_age_w)]
-
-    return fits
-
-
-def create_toolbox(mut_eta, mut_indpb, **kwargs):
-
-    creator.create("FitnessMax", base.Fitness, weights=(1.00,))
+    creator.create("FitnessMax", base.Fitness,
+                   weights=(params['dist_weight'], params['symm_weight'], params['age_weight']))
     creator.create("Individual", list, fitness=creator.FitnessMax)
 
     toolbox = base.Toolbox()
@@ -97,105 +51,164 @@ def create_toolbox(mut_eta, mut_indpb, **kwargs):
     toolbox.register("evaluate_dist", fit.distance)
     toolbox.register("evaluate_symm", fit.symmetry)
     toolbox.register("mate", tools.cxTwoPoint)
-    toolbox.register("mutate", tools.mutPolynomialBounded, eta=mut_eta, low=0., up=1., indpb=mut_indpb)
+    toolbox.register("mutate", tools.mutPolynomialBounded, eta=params['mut_eta'],
+                     low=0., up=1., indpb=params['mut_indpb']) # todo: passing these params to the toolbox method means these don't have to be updated every loop
     # toolbox.register("mutate", tools.mutGaussian, mu=0.5, sigma=0.1, indpb=0.05)
     # toolbox.register("select", tools.selNSGA2)
 
-    toolbox.register("tournament_selection", tools.selTournament)
-    toolbox.register("roulette_selection", tools.selRoulette)
-    toolbox.register("parent_selection", tools.selRandom)
-    toolbox.register("deterministic_selection", tools.selWorst)
-    toolbox.register("playing_select", tools.selWorst)
+    toolbox.register("tournamentSelection", tools.selTournament,params['k_parents'])
+    toolbox.register("rouletteSelection", tools.selRoulette, params['k_parents'])
+    toolbox.register("randomSelection", tools.selRandom, params['k_parents'])
+    toolbox.register("deterministicSelection", tools.selWorst, params['k_parents'])
 
     return toolbox
 
 
-def insert(selected, population):
-    """Returns the population in order, with any non-selected genes replaced with new ones"""
+def init_dfs(natures, pop_size): # todo: could be moved to utils, preset arg
 
-    new_pop = []
-    k = 0
-    new_genes = [new_gene for new_gene in selected if new_gene not in population]
+    index = pd.MultiIndex.from_product([natures, range(pop_size)],
+                                       names=['pop', 'ind'])
 
-    for gene in population:
-        if gene in selected:
-            new_pop.append(gene)
-        elif gene not in selected:
-            new_pop.append(new_genes[k])
-            k += 1
+    pops = pd.DataFrame([random_gene(preset.master['genotype'])
+                         for _ in range(pop_size) for _ in natures],
+                        index=index, columns=preset.master['genotype'])
 
+    fits = pd.DataFrame([[0] * len(natures) * pop_size] * len(preset.master['fitness_metrics']),
+                        index=index, columns=preset.master['fitness_metrics'])
 
-    return new_pop
+    return pops, fits
 
 
-def create_exp_path():
-    # print(glob.glob("experiments/*"))
-    # print(glob.glob("experiments/*") is [])
-    # # print(['experiments/'])
-    # # print(glob.glob("experiments/*") is ['experiments/'])
+def evolve(pops, ages, playing):
 
-    if not glob.glob("experiments/*"):
-        exp_number = 0
-    else:
-        exp_number = max([int(f.split("\\")[-1].split("_")[-1]) for f in glob.glob("experiments/*")]) + 1
+    pops = pops.copy().sample(frac=1)
+    ages = ages.loc[pops.index]
 
-    root = "experiments"
-    exp_path = os.path.join(root, "experiment_{}".format(exp_number)) + "\\"
-    return exp_path
+    survivors = []
 
+    for nature in pops.index.levels[0]: # todo: check slicing, could use .xs instead
 
-def save_data(pop_phenes, pop_fits, gen_path, filename):
+        genes = toolbox.initPopulation(pops.xs(nature, level='pop', drop_level=False) # could set drop_level to True
+                                           .reset_index(drop=False).tolist())
+        pop_fits = evaluate(genes, playing, ages=ages.loc[nature])
+        pop = fit.attach(genes, pop_fits)
 
-    pop_fits = [round(i,2) for (i,) in pop_fits]
+        offspring = reproduce(pop, playing)
+        survivors += select(pop + offspring, preset.config['survivor_selection'])
 
-    pop_phenes['fitness'] = pop_fits
-
-    name = filename.split('/')[-1]
-    pop_phenes.to_csv(os.path.join(gen_path, name))
-
-
-def future_ui_features(preset_path, params):
-    # todo: Load these from somewhere else. Add button functionality.
-    # once this is done this function can be removed and toolbox can be moved out of the loop.
-    params['gen_cols'] = pd.read_csv(f'{preset_path}\\current\\bass.csv',
-                                     header=0, nrows=1).columns.tolist()[1:]
-    params['phen_cols'] = pd.read_csv(f'{preset_path}\\current\\playing.csv',
-                                      header=0, nrows=1).columns.tolist()[1:]
-    params['scramble'] = False
-    params['parent_selection'] = random.choice(['roulette', 'tournament', 'random'])
-    params['survivor_selection'] = 'deterministic'
-
-    return params
-
-
-def evolve(pops, toolbox, pop_size, natures, parent_selection, survivor_selection, **kwargs):
-    # offspring = toolbox.parent_select([pops[nature].sample(frac=1), pop_size
-    #                                   for nature in natures])
-
-    genes = [pops.loc[pop].sample(frac=1).values.tolist()
-             for pop in pops.index.levels[0]]
-
-    parents = select_parents(genes, parent_selection)
-
-    offspring = list(map(toolbox.clone, offspring))
-
-    # todo: [LEFT OFF] implement the evolution procedure.
+    # todo: check if fits saving works
+    index = pd.MultiIndex.from_tuples([tuple(ind[:2]) for ind in c(survivors)], names=['pop', 'ind'])
+    pops = pd.DataFrame(survivors, index=index, columns=pops.columns)
+    fits = pd.DataFrame([ind.fitness.values for ind in c(survivors)],
+                        index=index, columns=preset.master['fitness_metrics'])
 
     # todo: implement crossover as an optional feature?
 
-    return pops
+    return pops, fits
 
-#
-# def select_parents(genes, parent_selection):
-#     if parent_selection == random:
-#
 
-def random_playing_selection(pops, instr_count):
-    playing = pd.concat([pops.xs(pop, drop_level=False).sample(count)
-                            for pop, count in zip(pops.index.levels[0],instr_count)])
-    print(playing)
-    return playing
+def evaluate(pop, playing, ages=False):
+    """
+    :param genes: a list of individual genes
+    :param playing: DataFrame of currently playing individuals
+    :param ages: If filled, an ordered age column. Else, age is assumed to be 0 for all individuals
+    :return: a list of individual genes with attached fitness values, fit_df entries
+    """
+    distance = [fit.distance(gene, preset.config['optimum']) for gene in pop]
+    symmetry = [fit.symmetry(gene, playing) for gene in pop]
 
+    if ages: #todo: check
+        ages = (ages + 1).values()
+    else:
+        ages = [0] * len(pop)
+
+    fits = zip([distance, symmetry, ages])
+
+    return fits
+
+
+def reproduce(pop, playing):
+
+    pop_indices = [ind[0] for ind in pop]
+    mut_indices = [i + 1 for i in range(preset.config['pop_size'] + preset.config['k_offspring'])
+                   if i + 1 not in pop_indices] # todo: check if index starts from 1
+
+    selected = select(pop, preset.config['parent_selection'])
+    parents = [toolbox.clone(ind) for ind in selected]
+
+    offspring = [[ind[0], mut_indices[i]] + toolbox.mutate(ind[2:])
+                 for i, ind in enumerate(parents)]
+
+    return evaluate(offspring, playing)
+
+
+def select(pop, selection_method):
+    # todo: check indexing of these dfs.
+    # todo: implement weights for fitness, check how deap does multi objective.
+
+    if selection_method == 'random':
+        return toolbox.randomSelection(pop)
+
+    elif selection_method == 'tournament':
+        return toolbox.tournamentSelection(pop)
+
+    elif selection_method == 'roulette':
+        return toolbox.rouletteSelection(pop)
+
+    elif selection_method == 'deterministic':
+        return toolbox.deterministicSelection(pop)
+
+
+def playing_selection(pops):
+    counts = preset.config['instr_counts']
+
+
+def main():
+
+    input('Evolution module loaded. Set parameters and hit enter/return to continue.')
+    # todo: Replace with a selection screen / time in the UI.
+
+    global preset
+    global toolbox
+    preset = Preset()
+    toolbox = create_toolbox(**preset.config)
+
+    if preset.master['from_csv']:
+        raise NotImplementedError()
+        # load stuff from csv
+        # will just start a new experiment
+
+    else:
+        pops, fits = init_dfs(**preset.config)
+        playing = playing_selection(pops, fits)
+
+    g = 1
+    done = False
+
+    while not done:
+        print(f'--- Generation {g} ---')
+
+        # add fitdf metrics, weights
+
+        pd.to_csv(pd.concat([pops, fits], axis=1), preset.path) # can do concat earlier, or not at all
+        pd.to_csv(playing, preset.path)
+
+        preset.save_experiment()
+
+        time.sleep(preset.config['gen_length'])
+
+        preset.update() # todo: implement UI buttons
+        toolbox = create_toolbox(**preset.config)
+
+        pops, fits = evolve(pops, fits.loc['age'], playing)
+        playing = playing_selection(pops, fits)
+        # todo: left off at implementing playing selection. DF sorting and slicing.
+
+        g += 1
+
+
+if __name__ == '__main__':
+    main()
 
 '''
         for i, pop in enumerate(pops):
@@ -269,81 +282,3 @@ def random_playing_selection(pops, instr_count):
             ages.iloc[:,i] += age_table  # increase age of present genes
             ages.iloc[:,i] *= age_table  # reset departed genes to 0
 '''
-
-def main():
-
-    g = 0  # generation counter
-
-    exp_path = create_exp_path()
-    preset_path = read_preset_path()
-    # old_preset_path = preset_path
-    # n_available_samples = read_n_available_samples()
-    # preset_config = load_config(preset_path)
-    # files = [file.replace('\\', '/') for file in glob.glob(preset_path + 'current/*.csv') if 'playing' not in file]
-
-    print('Evolution module loaded.')
-    # time.sleep(6) # give the user some time to configure the params (such as recovery).
-                   # todo: Could be replaced with a prompt for the user to set params.
-
-    preset_path = read_preset_path()
-    old_preset_path = preset_path
-    n_available_samples = read_n_available_samples()
-    params = load_config(preset_path)
-
-    # if preset_config['recovery']: # todo
-    #     # index, pops, fits = load_pops(**preset_config)
-    #     raise NotImplementedError()
-
-    done = False
-    while not done:
-        start_time = time.time()
-
-        g += 1
-
-        preset_path = read_preset_path()
-        params = load_config(preset_path)
-        playing_path = f'{preset_path}current/playing.csv'
-
-        params = future_ui_features(preset_path, params) # todo: implement UI buttons
-        toolbox = create_toolbox(**params)
-
-        if (g == 1 or params['scramble']) and not params['recovery']: # May need to always do this if changing preset.
-            index, pops, fits = random_pops(**params)
-            playing = random_playing_selection(pops, params['instr_count'])
-
-        elif old_preset_path != preset_path:
-            fits = random_pops(**params, only_ages=True)
-
-        old_preset_path = preset_path
-
-        # next_play = pd.DataFrame(columns=params['phen_cols']) # todo: may not need
-
-        print("-- Generation %i --" % g)
-
-        # optimum = fit.compute_optimum(load_genepool(playing_path), params['phen_cols'])
-        # todo: update with autopilot call
-        optimum = params['manual_optimum']
-
-        gen_path = os.path.join(exp_path, "gen_{}".format(g))
-        create_folder(gen_path)
-
-        index, pops, fits = evolve(pops, playing, toolbox, **params)
-
-        next_play = playing_selection(pops, fits)
-
-        save_complete = False
-        while not save_complete:
-            try:
-                next_play.to_csv(playing_path)
-                if collect_data: save_data(next_play, play_fits, gen_path, playing_path) # todo: function needs a rewrite
-                save_complete = True
-            except:
-                print(f"saving {preset_path}current/playing.csv failed.")
-
-        if params['debug_mode']: print('Cycle time: ', time.time() - start_time)
-
-        time.sleep(preset_config['gen_length'])
-
-
-if __name__ == '__main__':
-    main()

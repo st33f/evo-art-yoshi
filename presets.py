@@ -4,10 +4,110 @@ import json
 import os
 import glob
 import numpy as np
+from pathlib import Path
+from genetics import MappingFunction
 
-PRESETS_DIR_PATH = 'data/presets/'
-MASTER_CONFIG_PATH = 'data/master_'
-DEFAULT_CONFIG_DIR_PATH = PRESETS_DIR_PATH + 'default_old/'
+# todo: might be prudent to move preset class into separate preset.py and rename this to utils
+# todo: import path variables to various scripts from here? rename to DEFAULT_?
+
+PRESETS_DIR_PATH = Path('data/presets/')
+MASTER_CONFIG_PATH = Path('data/master_')
+DEFAULT_CONFIG_DIR_PATH = PRESETS_DIR_PATH / 'default_old/'
+
+
+class Preset:
+    """
+    Class containing references to files associated with a preset.
+
+    ideas:
+    Use preset manager functionality on startup.
+    - can load an existing preset chosen from a list of names. This initializes a
+    - can initiate and name a new preset, specifying the parameters or importing a json from another preset.
+      Build the required folders and set up everything needed to run.
+    - can also do this during operation, generate a new preset.
+    - never lose the experiment path during.
+
+    ^ most of this already supported in existing gui. Look at implementing a step for choosing a new preset etc.,
+    or synthesizing with the gui. Should be easy, actually - it updates the jsons so just initialize and refresh?
+
+    - write docstring
+    """
+
+    def __init__(self, master_config_path=MASTER_CONFIG_PATH):
+
+        self.master = load_config(master_config_path)
+        self.path = Path(self.master['preset_path'])
+
+        self.config = load_config(self.path)
+        self.config_features() # todo: integrate into config and remove
+        self.mapper = MappingFunction()
+
+        self.experiment = None
+
+    def update(self, master_config_path=MASTER_CONFIG_PATH, setup=True):
+
+        self.master = load_config(master_config_path)
+        self.path = Path(self.master['preset_path'])
+        self.config = load_config(self.path)
+
+    def save_experiment(self):
+
+        self.update()
+
+        if self.master['save_data']:
+
+            if not self.experiment:
+                self.create_experiment()
+
+            create_folder(self.experiment / f'gen_{g}')
+            self.log_params()
+
+        else:
+            self.experiment = None
+
+    def create_experiment(self): # todo: could move to utils
+
+        preset_name = self.path.split('\\')[-1]
+
+        if not glob.glob(f"experiments/{preset_name}_exp_*"):
+            exp_number = 0
+        else:
+            exp_number = max([int(f.split("\\")[-1].split("_")[-1])
+                              for f in glob.glob(f"experiments/{preset_name}*")]) + 1
+
+        exp_path = Path(f'experiments\\{preset_name}_exp_{exp_number}\\')
+        create_folder(self.experiment)
+
+        return exp_path
+
+    def log_params(self):
+        filepath = self.experiment / "params.csv"
+        with filepath.open("w", encoding="utf-8") as f:
+            params = ",".join([str(param) for param in self.config if type(param) is float])
+            f.write(params)
+
+    def config_features(self):
+        # todo: Implement these as options/settings in the UI, once this is done this function can be removed
+
+        self.config['parent_selection'] = random.choice(['roulette', 'tournament', 'random', 'deterministic'])
+        self.config['survivor_selection'] = random.choice(['roulette', 'tournament', 'random', 'deterministic'])  # NSGA2?
+        self.config['playing_selection'] = 'deterministic'
+        self.config['k_parents'] = 5
+        self.config['mutation'] = True
+        self.config['crossover'] = False
+
+
+        self.master['save_data'] = True
+        self.master['recovery'] = False
+        self.master['from_csv'] = False
+
+        return self
+
+    def __repr__(self):
+        return f'master: {self.master}\npreset: {self.path}\nconfig: \n{self.config}\n'
+
+    # todo: write a string return for debug print?
+
 
 
 def read_preset_path(master_config_path=MASTER_CONFIG_PATH):
@@ -40,7 +140,7 @@ def create_folder(directory):
 def create_preset(preset_name, config_path=DEFAULT_CONFIG_DIR_PATH):
     preset_path = 'data/presets/' + preset_name + os.sep
     config = load_config(config_path)
-    create_data_structure(preset_path, config)
+    create_data_structure(preset_path, config) # todo: update
     save_config(preset_path, config)
 
 
@@ -51,14 +151,12 @@ def load_config(config_path=MASTER_CONFIG_PATH):
     done = False
     while not done:
         try:
-            with open(config_path + 'config.json') as f:
+            with open(config_path / 'config.json') as f:
 
                 # config = json.load(f)
                 config = {**json.load(f),
-                          'recovery': False,
-                          'debug_mode': True,
-                          'collect_data': False
-                }  # Comment out this line once the button is implemented in the GUI.
+                          'n_available_samples': read_n_available_samples(),
+                }  # todo: Comment out this line once the button is implemented in the GUI. [still needed?]
 
             done = True
         except:
@@ -74,99 +172,11 @@ def save_config(path, config):
     done = False
     while not done:
         try:
-            with open(path + 'config.json', 'w') as fp:
+            with open(Path(path) / 'config.json', 'w') as fp:
                 json.dump(config, fp)
             done = True
         except:
             print(f"saving under {path} failed.")
-
-
-
-def create_data_structure(preset_path, config):
-    create_folder(preset_path)
-    create_folder(preset_path + 'initial')
-    for nature in config['natures']:
-        create_initial_genes(preset_path + 'initial/', config, nature)
-    create_folder(preset_path + 'current')
-
-
-def create_initial_genes(preset_path, config, name):
-    df = make_genepool(config['pop_size'])  # pull size from config here if needed
-    df.to_csv(preset_path + name + '.csv')
-
-
-def initialize_current(preset_path):
-    create_folder(f'{preset_path}current')
-
-    for file in glob.glob(f'{preset_path}initial/*'):
-        data = load_genepool(file)
-        name = file.split(os.sep)[-1]
-        save_genepool(data, f'{preset_path}current{os.sep}{name}')
-
-
-def create_random_indices(instr_counts):
-
-    # get configs
-    preset_path = read_preset_path()
-    preset_config = load_config(preset_path)
-
-    result = []
-
-    for count in instr_counts:
-        choice = np.random.choice(preset_config['pop_size'], count, replace=False)
-        result.append(choice.tolist())
-
-    return result
-
-def select_genes(preset_path):
-    preset_config = load_config(preset_path)
-    n_samples = read_n_available_samples(MASTER_CONFIG_PATH)
-    phenotypes = []
-    natures = preset_config["natures"]
-    for i, nature in enumerate(natures):
-        data = load_genepool(preset_path + f'current{os.sep}{nature.lower()}.csv')
-        for j in range(int(preset_config["instr_count"][i])):
-            gene = data.iloc[j,]
-            phenotype = make_phenotype(gene, i, preset_config, n_samples)
-            phenotypes.append(phenotype)
-
-    current_phenotypes = pd.DataFrame(phenotypes)
-
-    current_phenotypes.to_csv(f"{preset_path}current/playing.csv")
-
-
-def select_genes_old(preset_path):
-    preset_config = load_config(preset_path)
-
-    indices = [[x] for x in range(len(preset_config["natures"]))]
-    print(indices)
-    n_samples = read_n_available_samples(MASTER_CONFIG_PATH)
-
-    phenotypes = []
-
-    files = glob.glob(f'{preset_path}current/*.csv')
-
-    try:
-        files.remove(f'{preset_path}current/playing.csv')
-    except:
-        print()
-
-
-    for i, index in enumerate(indices):
-        if index == []:
-            continue
-        file = files[i]
-        data = load_genepool(file)
-        for j in index:
-            # get configs
-            preset_config = load_config(preset_path)
-
-            gene = data.iloc[j,]
-            phenotype = make_phenotype(gene, i, preset_config, n_samples)
-            phenotypes.append(phenotype)
-
-    current_phenotypes = pd.DataFrame(phenotypes)
-    current_phenotypes.to_csv(f"{preset_path}current/playing.csv")
 
 
 def create_preset_from_puppetmaster(config_dict, name):
@@ -187,7 +197,7 @@ def create_preset_from_puppetmaster(config_dict, name):
 
     for nature in natures:
         # create initial gene pools
-        create_initial_genes(f"{new_preset_path}initial/", config_dict, f"{nature}")
+        create_initial_genes(f"{new_preset_path}initial/", config_dict, f"{nature}") # todo: update
 
     initialize_current(new_preset_path)
     # the following creates playing.csv

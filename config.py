@@ -303,7 +303,6 @@ def get_available_samples():
 
 
 def check_for_playing(preset_path):
-
     if not os.path.isfile(preset_path + "playing.csv"):
         select_genes(preset_path)
 
