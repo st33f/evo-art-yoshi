@@ -1,4 +1,4 @@
-##Gevo Art Project
+## Gevo Art Project
 
 This repository contains the files needed to run the system described in "Evolutionary music generation based on geometry" (Huebotter, Maaiveld, Wijtsma, 2020).
 
@@ -25,7 +25,7 @@ python main.py
 
 The source code has been formatted with [Black](https://github.com/psf/black).
 
-####TODO:
+#### TODO:
 
 + Implement argument parser
 
