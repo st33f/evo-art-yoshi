@@ -25,7 +25,5 @@ python main.py
 
 The source code has been formatted with [Black](https://github.com/psf/black).
 
-#### TODO:
-
-+ Implement argument parser
+The paper describing the findings is available at https://www.researchgate.net/publication/351005815_Evolutionary_Generation_of_Music_with_Geometry.
 
